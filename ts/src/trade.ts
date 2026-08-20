@@ -5,3 +5,20 @@ export interface Trade {
   sellOrderId: string;
   timestamp: number;
 }
+
+
+export function createTrade(price:number, quantity:number,buyOrderId: string, sellOrderId: string): Trade {
+  if (quantity <= 0) {
+    throw new Error(`You cannot place an empty trade`)
+  }
+  if(buyOrderId === sellOrderId) {
+    throw new Error(`You cannot place a trade where the buy and sell order are the same`)
+  }
+  return {
+    price,
+    quantity,
+    buyOrderId,
+    sellOrderId,
+    timestamp: Date.now(),
+  }
+}
