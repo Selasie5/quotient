@@ -41,7 +41,7 @@ matchbook/
 ## Tech Stack
 
 - **TypeScript / Node.js** — primary implementation, used for all core logic and the API layer
-- **Jest** — testing
+- **Vitest** — testing
 - **C++** — performance-focused port of `OrderBook` and `MatchingEngine` only, used to benchmark against the TS implementation
 
 ## Getting Started
