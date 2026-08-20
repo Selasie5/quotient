@@ -1,0 +1,19 @@
+{
+  "name": "quotient",
+  "version": "1.0.0",
+  "description": "A limit order book and matching engine that implements price-time priority matching — the core mechanism behind how exchanges and trading venues execute orders.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
