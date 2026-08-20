@@ -24,7 +24,7 @@ export interface CreateOrderInput{
 
 export function createOrder(input: CreateOrderInput): Order {
   if (input.quantity <= 0) {
-    throw new Error (`Order quantity must be greater than O, got ${input.quantity}`)
+    throw new Error ("order quantity must be greater than 0")
   }
 
   if (input.type === 'limit') {
@@ -36,7 +36,7 @@ export function createOrder(input: CreateOrderInput): Order {
     id: input.id,
     type: input.type,
     side: input.side,
-    price: input.price,
+    price: input.price ?? 0,
     quantity: input.quantity,
     timestamp: input.timestamp ?? Date.now(),
   }

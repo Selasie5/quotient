@@ -12,7 +12,7 @@ export function createTrade(price:number, quantity:number,buyOrderId: string, se
     throw new Error(`You cannot place an empty trade`)
   }
   if(buyOrderId === sellOrderId) {
-    throw new Error(`You cannot place a trade where the buy and sell order are the same`)
+    throw new Error(`same order id`)
   }
   return {
     price,
