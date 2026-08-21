@@ -18,6 +18,10 @@ export class PriceLevel {
 
 
   enqueue(order: Order): void {
+    if (this.nodesById.has(order.id)) {
+      throw new Error(`Duplicate order ID: ${order.id}`);
+    }
+
     const node = new OrderNode(order);
 
     if (this.tail === null)
