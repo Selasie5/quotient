@@ -1,9 +1,9 @@
 import { Order } from "./order";
 
 class OrderNode {
-  order: Order,
-  prev: OrderNode | null;
-  next: OrderNode | null;
+  order: Order;
+  prev: OrderNode | null =null;
+  next: OrderNode | null =null;
 
   constructor(order: Order) {
     this.order = order;
@@ -11,8 +11,27 @@ class OrderNode {
 }
 export class PriceLevel {
   private orders: Order[] = [];
+  private head: OrderNode | null = null;
+  private tail: OrderNode | null = null;
+  private nodesById = new Map<string, OrderNode>();
+  private runningQuantity = 0;
+
+
   enqueue(order: Order): void {
-    this.orders.push(order);
+    const node = new OrderNode(order);
+
+    if (this.tail === null)
+    {
+      this.tail = node;
+      this.head = node;
+    }
+    else {
+      node.prev = this.tail;
+      this.tail.next = node;
+      this.tail = node;
+    }
+    this.nodesById.set(order.id, node);
+    this.runningQuantity += order.quantity;
   }
 
   dequeueFront(): Order | undefined {
