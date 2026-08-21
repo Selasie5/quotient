@@ -47,7 +47,7 @@ export class PriceLevel {
     return true
   }
   totalQuantity(): number{
-    return this.orders.reduce((sum, o)=> sum + o.quantity, 0)
+    return this.runningQuantity
   }
 
   private unlink(node: OrderNode): void{
