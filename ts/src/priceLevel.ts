@@ -35,16 +35,37 @@ export class PriceLevel {
   }
 
   dequeueFront(): Order | undefined {
-    return this.orders.shift();
+    if (this.head === null) return undefined;
+    const node = this.head;
+    this.unlink(node);
+    return node.order;
   }
   cancelOrder(orderId: string): boolean{
-    const index = this.orders.findIndex(o => o.id === orderId);
-    if (index === -1) return false;
-    this.orders.splice(index, 1);
-    return true;
-
+    const node = this.nodesById.get(orderId);
+    if (!node) return false;
+    this.unlink(node);
+    return true
   }
   totalQuantity(): number{
     return this.orders.reduce((sum, o)=> sum + o.quantity, 0)
+  }
+
+  private unlink(node: OrderNode): void{
+    if (node.prev) {
+      node.prev.next = node.next
+    }
+    else {
+      this.head = node.next;
+    }
+
+    if (node.next) {
+      node.next.prev = node.prev;
+    }
+    else {
+      this.tail = node.prev;
+    }
+
+    this.nodesById.delete(node.order.id)
+    this.runningQuantity-=node.order.quantity
   }
 }
