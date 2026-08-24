@@ -53,7 +53,9 @@ export class PriceLevel {
   totalQuantity(): number{
     return this.runningQuantity
   }
-
+  isEmpty(): boolean {
+    return this.head === null;
+}
   private unlink(node: OrderNode): void{
     if (node.prev) {
       node.prev.next = node.next
