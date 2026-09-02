@@ -1,24 +1,49 @@
 import { Order } from "./order";
+import { MaxHeap } from "./maxHeap";
 import { PriceLevel } from "./priceLevel";
 
 export class BidBook {
-  private levels = new Map<number, PriceLevel>;
+  private readonly levels = new Map<number, PriceLevel>();
+  private readonly prices = new MaxHeap();
+  private readonly pricesInHeap = new Set<number>();
 
   addOrder(order: Order): void {
-    if (!this.levels.has(order.price)) {
-      this.levels.set(order.price, new PriceLevel());
+    const price = order.price;
+    if (price === undefined) {
+      throw new Error("A resting bid requires a price");
     }
-    this.levels.get(order.price)!.enqueue(order);
+
+    if (!this.levels.has(price)) {
+      this.levels.set(price, new PriceLevel());
+    }
+
+    const level = this.levels.get(price)!;
+    if (level.isEmpty() && !this.pricesInHeap.has(price)) {
+      this.prices.insert(price);
+      this.pricesInHeap.add(price);
+    }
+
+    level.enqueue(order);
   }
 
   bestPrice(): number | undefined {
-    let best: number | undefined;
-    for (const [price, levels] of this.levels) {
-      if (levels.isEmpty()) continue;
-      if (best === undefined || price > best) {
-        best = price;
-      }
+    while (this.prices.size > 0) {
+      const price = this.prices.peek()!;
+      const level = this.levels.get(price);
+
+      if (level !== undefined && !level.isEmpty()) return price;
+
+      this.prices.pop();
+      this.pricesInHeap.delete(price);
     }
-    return best;
+
+    return undefined;
+  }
+
+  dequeueBestOrder(): Order | undefined {
+    const price = this.bestPrice();
+    if (price === undefined) return undefined;
+
+    return this.levels.get(price)!.dequeueFront();
   }
 }

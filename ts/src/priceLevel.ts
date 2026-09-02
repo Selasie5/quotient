@@ -10,7 +10,6 @@ class OrderNode {
   }
 }
 export class PriceLevel {
-  private orders: Order[] = [];
   private head: OrderNode | null = null;
   private tail: OrderNode | null = null;
   private nodesById = new Map<string, OrderNode>();
@@ -52,6 +51,10 @@ export class PriceLevel {
   }
   totalQuantity(): number{
     return this.runningQuantity
+  }
+
+  isEmpty(): boolean {
+    return this.head === null;
   }
 
   private unlink(node: OrderNode): void{
