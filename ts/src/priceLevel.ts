@@ -43,6 +43,11 @@ export class PriceLevel {
     this.unlink(node);
     return node.order;
   }
+
+  peekFront(): Order | undefined {
+    return this.head?.order;
+  }
+
   cancelOrder(orderId: string): boolean{
     const node = this.nodesById.get(orderId);
     if (!node) return false;

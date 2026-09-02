@@ -46,4 +46,11 @@ export class AskBook {
 
     return this.levels.get(price)!.dequeueFront();
   }
+
+  bestOrder(): Order | undefined {
+    const price = this.bestPrice();
+    if (price === undefined) return undefined;
+
+    return this.levels.get(price)!.peekFront();
+  }
 }

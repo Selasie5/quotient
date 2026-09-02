@@ -23,6 +23,14 @@ export class OrderBook {
     return this.asks.bestPrice();
   }
 
+  bestBidOrder(): Order | undefined {
+    return this.bids.bestOrder();
+  }
+
+  bestAskOrder(): Order | undefined {
+    return this.asks.bestOrder();
+  }
+
   dequeueBestBidOrder(): Order | undefined {
     return this.bids.dequeueBestOrder();
   }
