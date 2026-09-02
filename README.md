@@ -82,6 +82,17 @@ console.log(engine.getBookDepth());
 
 *Recorded as they're made, so this doubles as a log of trade-offs for anyone reading the code:*
 
+### Bid-side best-price lookup
+
+The bid book keeps its price levels in a map and their prices in a max-heap. This
+makes insertion O(log n) and returns the highest bid in O(1) when the heap's top
+entry is active.
+
+Empty price levels are removed lazily. `bestPrice()` discards empty levels from
+the top until it reaches a non-empty one. Each stale heap entry is discarded at
+most once, so cleanup is amortized across price-level insertions without the
+extra position bookkeeping required by an indexed heap.
+
 
 
 ## License
