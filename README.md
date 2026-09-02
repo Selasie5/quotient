@@ -82,11 +82,13 @@ console.log(engine.getBookDepth());
 
 *Recorded as they're made, so this doubles as a log of trade-offs for anyone reading the code:*
 
-### Bid-side best-price lookup
+### Two-sided best-price lookup
 
-The bid book keeps its price levels in a map and their prices in a max-heap. This
-makes insertion O(log n) and returns the highest bid in O(1) when the heap's top
-entry is active.
+The first two-sided book used a linear scan to find the lowest ask. That made the
+side-routing behavior easy to verify, but repeated top-of-book reads were O(n).
+After locking that behavior down with tests, the ask side moved to a min-heap,
+mirroring the max-heap already used for bids. Insertion is O(log n), and a normal
+best-price read is O(1) on either side.
 
 Empty price levels are removed lazily. `bestPrice()` discards empty levels from
 the top until it reaches a non-empty one. Each stale heap entry is discarded at

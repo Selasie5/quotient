@@ -1,8 +1,11 @@
 import { Order } from "./order";
+import { MinHeap } from "./minHeap";
 import { PriceLevel } from "./priceLevel";
 
 export class AskBook {
   private readonly levels = new Map<number, PriceLevel>();
+  private readonly prices = new MinHeap();
+  private readonly pricesInHeap = new Set<number>();
 
   addOrder(order: Order): void {
     const price = order.price;
@@ -14,20 +17,27 @@ export class AskBook {
       this.levels.set(price, new PriceLevel());
     }
 
-    this.levels.get(price)!.enqueue(order);
+    const level = this.levels.get(price)!;
+    if (level.isEmpty() && !this.pricesInHeap.has(price)) {
+      this.prices.insert(price);
+      this.pricesInHeap.add(price);
+    }
+
+    level.enqueue(order);
   }
 
   bestPrice(): number | undefined {
-    let best: number | undefined;
+    while (this.prices.size > 0) {
+      const price = this.prices.peek()!;
+      const level = this.levels.get(price);
 
-    for (const [price, level] of this.levels) {
-      if (level.isEmpty()) continue;
-      if (best === undefined || price < best) {
-        best = price;
-      }
+      if (level !== undefined && !level.isEmpty()) return price;
+
+      this.prices.pop();
+      this.pricesInHeap.delete(price);
     }
 
-    return best;
+    return undefined;
   }
 
   dequeueBestOrder(): Order | undefined {

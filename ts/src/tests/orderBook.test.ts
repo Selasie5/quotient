@@ -53,4 +53,29 @@ describe("OrderBook", () => {
     expect(book.bestBid()).toBeUndefined();
     expect(book.bestAsk()).toBeUndefined();
   });
+
+  test("handles an ask price reactivated before lazy cleanup", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("old-ask", "sell", 100));
+    expect(book.dequeueBestAskOrder()?.id).toBe("old-ask");
+
+    book.addOrder(limitOrder("new-ask", "sell", 100));
+
+    expect(book.bestAsk()).toBe(100);
+    expect(book.dequeueBestAskOrder()?.id).toBe("new-ask");
+    expect(book.bestAsk()).toBeUndefined();
+  });
+
+  test("reinserts an ask price reactivated after lazy cleanup", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("old-ask", "sell", 100));
+    book.dequeueBestAskOrder();
+    expect(book.bestAsk()).toBeUndefined();
+
+    book.addOrder(limitOrder("new-ask", "sell", 100));
+
+    expect(book.bestAsk()).toBe(100);
+  });
 });
