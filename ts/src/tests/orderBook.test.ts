@@ -232,4 +232,18 @@ describe("OrderBook", () => {
       asks: [],
     });
   });
+
+  test("returns detached open orders in arrival order", () => {
+    const book = new OrderBook();
+    const later = { ...limitOrder("later", "sell", 105, 4), timestamp: 20 };
+    const earlier = { ...limitOrder("earlier", "buy", 100, 3), timestamp: 10 };
+    book.addOrder(later);
+    book.addOrder(earlier);
+
+    const orders = book.getOrders();
+    expect(orders.map((order) => order.id)).toEqual(["earlier", "later"]);
+
+    orders[0].quantity = 999;
+    expect(book.findOrder("earlier")?.quantity).toBe(3);
+  });
 });
