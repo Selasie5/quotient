@@ -68,4 +68,13 @@ export class AskBook {
       false
     );
   }
+
+  findOrder(orderId: string): Order | undefined {
+    for (const level of this.levels.values()) {
+      const order = level.findOrder(orderId);
+      if (order !== undefined) return order;
+    }
+
+    return undefined;
+  }
 }

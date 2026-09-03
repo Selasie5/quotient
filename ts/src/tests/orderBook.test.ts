@@ -2,13 +2,13 @@ import { describe, expect, test } from "vitest";
 import { createOrder, Side } from "../order";
 import { OrderBook } from "../orderBook";
 
-function limitOrder(id: string, side: Side, price: number) {
+function limitOrder(id: string, side: Side, price: number, quantity = 1) {
   return createOrder({
     id,
     type: "limit",
     side,
     price,
-    quantity: 1,
+    quantity,
   });
 }
 
@@ -90,5 +90,73 @@ describe("OrderBook", () => {
     expect(book.removeOrder(first)).toBe(true);
     expect(book.bestAskOrder()?.id).toBe("second");
     expect(book.removeOrder(first)).toBe(false);
+  });
+
+  test("cancels an order by ID and reveals the next price", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("best", "buy", 105));
+    book.addOrder(limitOrder("next", "buy", 100));
+
+    expect(book.cancelOrder("best")).toBe(true);
+    expect(book.bestBid()).toBe(100);
+    expect(book.cancelOrder("missing")).toBe(false);
+  });
+
+  test("rejects duplicate order IDs across both sides", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("duplicate", "buy", 100));
+
+    expect(() =>
+      book.addOrder(limitOrder("duplicate", "sell", 105)),
+    ).toThrow(/Duplicate order ID/);
+  });
+
+  test("a quantity decrease preserves FIFO priority", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("first", "sell", 100, 5));
+    book.addOrder(limitOrder("second", "sell", 100, 5));
+
+    expect(book.modifyOrder("first", { quantity: 3 })).toBe(true);
+    expect(book.bestAskOrder()).toMatchObject({ id: "first", quantity: 3 });
+  });
+
+  test("a quantity increase loses FIFO priority", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("first", "sell", 100, 5));
+    book.addOrder(limitOrder("second", "sell", 100, 5));
+
+    expect(book.modifyOrder("first", { quantity: 8 })).toBe(true);
+    expect(book.bestAskOrder()?.id).toBe("second");
+    expect(book.dequeueBestAskOrder()?.id).toBe("second");
+    expect(book.bestAskOrder()).toMatchObject({ id: "first", quantity: 8 });
+  });
+
+  test("a price change moves the order to its new level", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("moving", "buy", 100, 5));
+    book.addOrder(limitOrder("other", "buy", 101, 5));
+
+    expect(book.modifyOrder("moving", { price: 102 })).toBe(true);
+    expect(book.bestBidOrder()).toMatchObject({ id: "moving", price: 102 });
+  });
+
+  test("an invalid modification leaves the order unchanged", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("order-1", "buy", 100, 5));
+
+    expect(() => book.modifyOrder("order-1", { quantity: 0 })).toThrow(
+      /greater than 0/,
+    );
+    expect(book.bestBidOrder()).toMatchObject({
+      id: "order-1",
+      price: 100,
+      quantity: 5,
+    });
   });
 });

@@ -217,4 +217,45 @@ describe("MatchingEngine simple match", () => {
     expect(engine.bestAskOrder()).toMatchObject({ id: "own-sell", quantity: 4 });
     expect(engine.bestBid()).toBeUndefined();
   });
+
+  test("cancels a resting order through the matching engine", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100));
+
+    expect(engine.cancelOrder("sell-1")).toBe(true);
+    expect(engine.bestAsk()).toBeUndefined();
+  });
+
+  test("modifies a resting order through the matching engine", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("buy-1", "buy", 100, 5));
+
+    expect(engine.modifyOrder("buy-1", { price: 101, quantity: 3 })).toEqual([]);
+    expect(engine.bestBidOrder()).toMatchObject({
+      id: "buy-1",
+      price: 101,
+      quantity: 3,
+    });
+  });
+
+  test("matches an order when a price modification crosses the book", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("buy-1", "buy", 99, 5));
+    engine.submitOrder(limitOrder("sell-1", "sell", 100, 5));
+
+    const trades = engine.modifyOrder("buy-1", { price: 100 });
+
+    expect(trades).toHaveLength(1);
+    expect(trades?.[0]).toMatchObject({
+      price: 100,
+      quantity: 5,
+      buyOrderId: "buy-1",
+      sellOrderId: "sell-1",
+    });
+    expect(engine.bestBid()).toBeUndefined();
+    expect(engine.bestAsk()).toBeUndefined();
+  });
 });

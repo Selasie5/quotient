@@ -1,5 +1,5 @@
 import { Order } from "./order";
-import { OrderBook } from "./orderBook";
+import { OrderBook, OrderModification } from "./orderBook";
 import { createTrade, Trade } from "./trade";
 
 export class MatchingEngine {
@@ -73,6 +73,44 @@ export class MatchingEngine {
 
   bestAskOrder(): Order | undefined {
     return this.book.bestAskOrder();
+  }
+
+  cancelOrder(orderId: string): boolean {
+    return this.book.cancelOrder(orderId);
+  }
+
+  modifyOrder(
+    orderId: string,
+    changes: OrderModification,
+  ): Trade[] | undefined {
+    const order = this.book.findOrder(orderId);
+    if (order === undefined) return undefined;
+
+    const priceChanged =
+      changes.price !== undefined && changes.price !== order.price;
+
+    if (!priceChanged) {
+      this.book.modifyOrder(orderId, changes);
+      return [];
+    }
+
+    const price = changes.price!;
+    const quantity = changes.quantity ?? order.quantity;
+    if (price <= 0) throw new Error("Modified price must be greater than 0");
+    if (quantity <= 0) {
+      throw new Error("Modified quantity must be greater than 0");
+    }
+
+    if (!this.book.cancelOrder(orderId)) {
+      throw new Error(`Order ${orderId} could not be removed for modification`);
+    }
+
+    return this.submitOrder({
+      ...order,
+      price,
+      quantity,
+      timestamp: Date.now(),
+    });
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {

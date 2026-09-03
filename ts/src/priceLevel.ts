@@ -48,6 +48,10 @@ export class PriceLevel {
     return this.head?.order;
   }
 
+  findOrder(orderId: string): Order | undefined {
+    return this.nodesById.get(orderId)?.order;
+  }
+
   reduceOrderQuantity(orderId: string, quantity: number): boolean {
     if (quantity <= 0) {
       throw new Error("Quantity reduction must be greater than 0");
