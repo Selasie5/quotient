@@ -1,4 +1,5 @@
 import { Order } from "./order";
+import { DepthLevel } from "./bookDepth";
 import { MinHeap } from "./minHeap";
 import { PriceLevel } from "./priceLevel";
 
@@ -67,6 +68,17 @@ export class AskBook {
       this.levels.get(order.price)?.reduceOrderQuantity(order.id, quantity) ??
       false
     );
+  }
+
+  getDepth(): DepthLevel[] {
+    const depth: DepthLevel[] = [];
+
+    for (const [price, level] of this.levels) {
+      const quantity = level.totalQuantity();
+      if (quantity > 0) depth.push({ price, quantity });
+    }
+
+    return depth.sort((left, right) => left.price - right.price);
   }
 
 }

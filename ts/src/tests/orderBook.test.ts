@@ -183,4 +183,39 @@ describe("OrderBook", () => {
     ).not.toThrow();
     expect(book.bestBid()).toBe(101);
   });
+
+  test("returns aggregated depth in market order", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("bid-100-a", "buy", 100, 2));
+    book.addOrder(limitOrder("bid-102", "buy", 102, 3));
+    book.addOrder(limitOrder("bid-100-b", "buy", 100, 4));
+    book.addOrder(limitOrder("ask-105", "sell", 105, 5));
+    book.addOrder(limitOrder("ask-104-a", "sell", 104, 6));
+    book.addOrder(limitOrder("ask-104-b", "sell", 104, 7));
+
+    expect(book.getDepth()).toEqual({
+      bids: [
+        { price: 102, quantity: 3 },
+        { price: 100, quantity: 6 },
+      ],
+      asks: [
+        { price: 104, quantity: 13 },
+        { price: 105, quantity: 5 },
+      ],
+    });
+  });
+
+  test("omits empty levels from the depth snapshot", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("bid-1", "buy", 100, 2));
+    book.addOrder(limitOrder("ask-1", "sell", 105, 3));
+    book.cancelOrder("bid-1");
+
+    expect(book.getDepth()).toEqual({
+      bids: [],
+      asks: [{ price: 105, quantity: 3 }],
+    });
+  });
 });

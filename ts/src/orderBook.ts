@@ -1,5 +1,6 @@
 import { AskBook } from "./askBook";
 import { BidBook } from "./bidBook";
+import { BookDepth } from "./bookDepth";
 import { Order } from "./order";
 
 export interface OrderModification {
@@ -111,5 +112,12 @@ export class OrderBook {
       timestamp: Date.now(),
     });
     return true;
+  }
+
+  getDepth(): BookDepth {
+    return {
+      bids: this.bids.getDepth(),
+      asks: this.asks.getDepth(),
+    };
   }
 }

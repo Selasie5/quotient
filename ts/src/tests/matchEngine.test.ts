@@ -270,4 +270,16 @@ describe("MatchingEngine simple match", () => {
     ).not.toThrow();
     expect(engine.bestAsk()).toBe(101);
   });
+
+  test("depth reflects quantities remaining after a partial fill", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100, 8));
+    engine.submitOrder(limitOrder("buy-1", "buy", 100, 3));
+
+    expect(engine.getDepth()).toEqual({
+      bids: [],
+      asks: [{ price: 100, quantity: 5 }],
+    });
+  });
 });

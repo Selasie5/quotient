@@ -1,4 +1,5 @@
 import { Order } from "./order";
+import { BookDepth } from "./bookDepth";
 import { OrderBook, OrderModification } from "./orderBook";
 import { createTrade, Trade } from "./trade";
 
@@ -111,6 +112,10 @@ export class MatchingEngine {
       quantity,
       timestamp: Date.now(),
     });
+  }
+
+  getDepth(): BookDepth {
+    return this.book.getDepth();
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {
