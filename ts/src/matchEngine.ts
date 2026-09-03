@@ -5,35 +5,52 @@ import { createTrade, Trade } from "./trade";
 export class MatchingEngine {
   private readonly book = new OrderBook();
 
-  submitOrder(incoming: Order): Trade | undefined {
+  submitOrder(incoming: Order): Trade[] {
     if (incoming.type !== "limit") {
       throw new Error("Simple matching supports limit orders only");
     }
 
-    const resting =
-      incoming.side === "buy"
-        ? this.book.bestAskOrder()
-        : this.book.bestBidOrder();
+    const trades: Trade[] = [];
+    let remainingQuantity = incoming.quantity;
 
-    if (resting === undefined || !this.pricesCross(incoming, resting)) {
-      this.book.addOrder(incoming);
-      return undefined;
+    while (remainingQuantity > 0) {
+      const resting =
+        incoming.side === "buy"
+          ? this.book.bestAskOrder()
+          : this.book.bestBidOrder();
+
+      if (resting === undefined || !this.pricesCross(incoming, resting)) break;
+
+      const executedQuantity = Math.min(
+        remainingQuantity,
+        resting.quantity,
+      );
+
+      if (executedQuantity === resting.quantity) {
+        if (!this.book.removeOrder(resting)) {
+          throw new Error(`Resting order ${resting.id} could not be removed`);
+        }
+      } else if (!this.book.reduceOrderQuantity(resting, executedQuantity)) {
+        throw new Error(`Resting order ${resting.id} could not be reduced`);
+      }
+
+      trades.push(
+        createTrade(
+          resting.price!,
+          executedQuantity,
+          incoming.side === "buy" ? incoming.id : resting.id,
+          incoming.side === "sell" ? incoming.id : resting.id,
+        ),
+      );
+
+      remainingQuantity -= executedQuantity;
     }
 
-    if (incoming.quantity !== resting.quantity) {
-      throw new Error("Simple matching requires equal order quantities");
+    if (remainingQuantity > 0) {
+      this.book.addOrder({ ...incoming, quantity: remainingQuantity });
     }
 
-    if (!this.book.removeOrder(resting)) {
-      throw new Error(`Resting order ${resting.id} could not be removed`);
-    }
-
-    return createTrade(
-      resting.price!,
-      incoming.quantity,
-      incoming.side === "buy" ? incoming.id : resting.id,
-      incoming.side === "sell" ? incoming.id : resting.id,
-    );
+    return trades;
   }
 
   bestBid(): number | undefined {
@@ -42,6 +59,14 @@ export class MatchingEngine {
 
   bestAsk(): number | undefined {
     return this.book.bestAsk();
+  }
+
+  bestBidOrder(): Order | undefined {
+    return this.book.bestBidOrder();
+  }
+
+  bestAskOrder(): Order | undefined {
+    return this.book.bestAskOrder();
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {

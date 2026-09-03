@@ -44,4 +44,10 @@ export class OrderBook {
       ? this.bids.removeOrder(order)
       : this.asks.removeOrder(order);
   }
+
+  reduceOrderQuantity(order: Order, quantity: number): boolean {
+    return order.side === "buy"
+      ? this.bids.reduceOrderQuantity(order, quantity)
+      : this.asks.reduceOrderQuantity(order, quantity);
+  }
 }

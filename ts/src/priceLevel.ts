@@ -48,6 +48,22 @@ export class PriceLevel {
     return this.head?.order;
   }
 
+  reduceOrderQuantity(orderId: string, quantity: number): boolean {
+    if (quantity <= 0) {
+      throw new Error("Quantity reduction must be greater than 0");
+    }
+
+    const node = this.nodesById.get(orderId);
+    if (!node) return false;
+    if (quantity >= node.order.quantity) {
+      throw new Error("Quantity reduction must leave a positive remainder");
+    }
+
+    node.order.quantity -= quantity;
+    this.runningQuantity -= quantity;
+    return true;
+  }
+
   cancelOrder(orderId: string): boolean{
     const node = this.nodesById.get(orderId);
     if (!node) return false;

@@ -83,3 +83,12 @@ test("isEmpty reflects state through enqueue/dequeue/cancel", () => {
   level.cancelOrder("A");
   expect(level.isEmpty()).toBe(true);
 });
+
+test("reducing an order updates both its quantity and the level total", () => {
+  const level = new PriceLevel();
+  level.enqueue(mkOrder("A", 10));
+
+  expect(level.reduceOrderQuantity("A", 4)).toBe(true);
+  expect(level.peekFront()?.quantity).toBe(6);
+  expect(level.totalQuantity()).toBe(6);
+});

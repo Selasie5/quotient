@@ -59,4 +59,13 @@ export class BidBook {
 
     return this.levels.get(order.price)?.cancelOrder(order.id) ?? false;
   }
+
+  reduceOrderQuantity(order: Order, quantity: number): boolean {
+    if (order.price === undefined) return false;
+
+    return (
+      this.levels.get(order.price)?.reduceOrderQuantity(order.id, quantity) ??
+      false
+    );
+  }
 }

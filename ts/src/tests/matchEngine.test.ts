@@ -15,8 +15,8 @@ describe("MatchingEngine simple match", () => {
   test("an incoming buy fully consumes one crossing ask", () => {
     const engine = new MatchingEngine();
 
-    expect(engine.submitOrder(limitOrder("sell-1", "sell", 100))).toBeUndefined();
-    const trade = engine.submitOrder(limitOrder("buy-1", "buy", 105));
+    expect(engine.submitOrder(limitOrder("sell-1", "sell", 100))).toEqual([]);
+    const [trade] = engine.submitOrder(limitOrder("buy-1", "buy", 105));
 
     expect(trade).toMatchObject({
       price: 100,
@@ -32,7 +32,7 @@ describe("MatchingEngine simple match", () => {
     const engine = new MatchingEngine();
 
     engine.submitOrder(limitOrder("buy-1", "buy", 105));
-    const trade = engine.submitOrder(limitOrder("sell-1", "sell", 100));
+    const [trade] = engine.submitOrder(limitOrder("sell-1", "sell", 100));
 
     expect(trade).toMatchObject({
       price: 105,
@@ -47,8 +47,8 @@ describe("MatchingEngine simple match", () => {
   test("non-crossing orders rest on their respective sides", () => {
     const engine = new MatchingEngine();
 
-    expect(engine.submitOrder(limitOrder("sell-1", "sell", 105))).toBeUndefined();
-    expect(engine.submitOrder(limitOrder("buy-1", "buy", 100))).toBeUndefined();
+    expect(engine.submitOrder(limitOrder("sell-1", "sell", 105))).toEqual([]);
+    expect(engine.submitOrder(limitOrder("buy-1", "buy", 100))).toEqual([]);
 
     expect(engine.bestBid()).toBe(100);
     expect(engine.bestAsk()).toBe(105);
@@ -61,21 +61,50 @@ describe("MatchingEngine simple match", () => {
     engine.submitOrder(limitOrder("sell-first", "sell", 100));
     engine.submitOrder(limitOrder("sell-second", "sell", 100));
 
-    const trade = engine.submitOrder(limitOrder("buy-1", "buy", 105));
+    const [trade] = engine.submitOrder(limitOrder("buy-1", "buy", 105));
 
     expect(trade?.sellOrderId).toBe("sell-first");
     expect(engine.bestAsk()).toBe(100);
   });
 
-  test("rejects an unequal crossing fill without removing the resting order", () => {
+  test("partially fills a resting order and preserves its remainder", () => {
     const engine = new MatchingEngine();
 
-    engine.submitOrder(limitOrder("sell-1", "sell", 100, 5));
+    engine.submitOrder(limitOrder("sell-1", "sell", 100, 8));
+    const [trade] = engine.submitOrder(limitOrder("buy-1", "buy", 100, 3));
 
-    expect(() =>
-      engine.submitOrder(limitOrder("buy-1", "buy", 100, 3)),
-    ).toThrow(/equal order quantities/);
+    expect(trade.quantity).toBe(3);
+    expect(engine.bestAskOrder()).toMatchObject({ id: "sell-1", quantity: 5 });
     expect(engine.bestAsk()).toBe(100);
     expect(engine.bestBid()).toBeUndefined();
+  });
+
+  test("rests the incoming remainder after consuming available asks", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100, 3));
+    const trades = engine.submitOrder(limitOrder("buy-1", "buy", 100, 5));
+
+    expect(trades).toHaveLength(1);
+    expect(trades[0].quantity).toBe(3);
+    expect(engine.bestAsk()).toBeUndefined();
+    expect(engine.bestBidOrder()).toMatchObject({ id: "buy-1", quantity: 2 });
+  });
+
+  test("fills across price levels without trading beyond the limit price", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-100", "sell", 100, 2));
+    engine.submitOrder(limitOrder("sell-101", "sell", 101, 3));
+    engine.submitOrder(limitOrder("sell-102", "sell", 102, 4));
+
+    const trades = engine.submitOrder(limitOrder("buy-1", "buy", 101, 7));
+
+    expect(trades.map(({ price, quantity }) => ({ price, quantity }))).toEqual([
+      { price: 100, quantity: 2 },
+      { price: 101, quantity: 3 },
+    ]);
+    expect(engine.bestAsk()).toBe(102);
+    expect(engine.bestBidOrder()).toMatchObject({ id: "buy-1", quantity: 2 });
   });
 });
