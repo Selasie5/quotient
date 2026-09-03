@@ -56,23 +56,39 @@ npm test
 Example usage:
 
 ```ts
-import { MatchingEngine } from "./src/matchingEngine";
+import { MatchingEngine } from "./src/matchEngine";
+import { createOrder } from "./src/order";
 
 const engine = new MatchingEngine();
 
-engine.submitLimitOrder({ side: "buy", price: 101, quantity: 10 });
-engine.submitLimitOrder({ side: "sell", price: 100, quantity: 5 });
-// -> produces a Trade for 5 units at price 100/101 depending on resting side
+engine.submitOrder(createOrder({
+  id: "sell-1",
+  ownerId: "participant-a",
+  type: "limit",
+  side: "sell",
+  price: 100,
+  quantity: 5,
+}));
 
-console.log(engine.getBookDepth());
+const trades = engine.submitOrder(createOrder({
+  id: "buy-1",
+  ownerId: "participant-b",
+  type: "market",
+  side: "buy",
+  quantity: 5,
+}));
+
+console.log(trades);
 ```
 
 ## Roadmap
 
-- [ ] `Order` / `Trade` data models with full test coverage
-- [ ] Core matching logic for limit orders (exact match, partial fill, no match)
-- [ ] Market orders, cancel, modify
-- [ ] Edge cases: self-trade prevention, partial-fill remainder handling, book depth query
+- [x] `Order` / `Trade` data models with test coverage
+- [x] Core matching loop for limit orders (exact match, partial fill, no match)
+- [x] Market orders
+- [ ] Cancel and modify
+- [x] Self-trade prevention and partial-fill remainder handling
+- [ ] Book depth query
 - [ ] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
 - [ ] C++ port of `OrderBook` and `MatchingEngine`, validated against the TS test suite
 - [ ] Benchmark: orders/sec, TS vs. C++ implementation
@@ -103,6 +119,31 @@ was covered by tests, removal was changed to use the selected order's side,
 price, and ID directly. `PriceLevel` already indexes its order nodes by ID, so
 the selected order is removed in O(1) without a second top-of-book lookup. Empty
 price levels remain in their heaps until the existing lazy cleanup runs.
+
+### Full matching loop and market orders
+
+The matching loop consumes the opposite side in price-time order until the
+incoming quantity is exhausted, liquidity runs out, or a limit price no longer
+crosses. A partially filled resting order is reduced in place so it keeps its
+FIFO position; a remaining incoming limit order rests with its original
+timestamp. Market orders ignore price boundaries and any unfilled remainder
+expires instead of entering the book.
+
+After the correctness-first implementation was committed, the loop was reviewed
+for a justified optimization. Producing `f` trades necessarily requires visiting
+`f` resting orders. Each visit already uses the heap for top-of-book selection
+and the price level's ID index for O(1) quantity updates or removal; O(log p)
+heap work occurs only when lazy cleanup removes an exhausted price level. A more
+complex batch path would not improve that lower bound, so further optimization
+is deferred until benchmarks show a real bottleneck.
+
+### Self-trade prevention
+
+Orders may carry an `ownerId`, which is separate from the unique order ID. When
+the next executable resting order has the same owner, the engine uses a
+cancel-incoming policy: it preserves any earlier third-party fills, leaves the
+self-owned resting order unchanged, and cancels the incoming remainder. Orders
+without an owner ID continue to match normally for backward compatibility.
 
 
 
