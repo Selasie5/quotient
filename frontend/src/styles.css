@@ -50,6 +50,7 @@ button:disabled { cursor: not-allowed; opacity: 0.45; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; }
 .status-dot.is-online { background: var(--bid); box-shadow: 0 0 0 3px var(--bid-wash); }
 .status-dot.is-offline { background: var(--ask); box-shadow: 0 0 0 3px var(--ask-wash); }
+.status-dot.is-connecting { background: var(--execution); box-shadow: 0 0 0 3px rgba(217, 185, 95, 0.11); }
 .status-divider { width: 1px; height: 16px; margin: 0 4px; background: var(--hairline-strong); }
 .feed-state { gap: 5px; }
 

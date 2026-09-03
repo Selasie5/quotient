@@ -7,7 +7,7 @@ interface OpenOrdersProps {
   orders: Order[];
   busyOrderId?: string;
   onCancel: (orderId: string) => Promise<void>;
-  onModify: (orderId: string, price: number, quantity: number) => Promise<void>;
+  onModify: (orderId: string, price: number, quantity: number) => Promise<boolean>;
 }
 
 export function OpenOrders({ orders, busyOrderId, onCancel, onModify }: OpenOrdersProps) {
@@ -22,8 +22,9 @@ export function OpenOrders({ orders, busyOrderId, onCancel, onModify }: OpenOrde
   }
 
   async function save(orderId: string) {
-    await onModify(orderId, Number(price), Number(quantity));
-    setEditingId(undefined);
+    if (await onModify(orderId, Number(price), Number(quantity))) {
+      setEditingId(undefined);
+    }
   }
 
   return (
@@ -49,7 +50,7 @@ export function OpenOrders({ orders, busyOrderId, onCancel, onModify }: OpenOrde
                   <td className="muted-cell">{order.type}</td>
                   <td>{editing ? <input aria-label="New price" className="table-input" type="number" min="0.01" step="0.01" value={price} onChange={event => setPrice(event.target.value)} /> : formatPrice(order.price)}</td>
                   <td>{editing ? <input aria-label="New quantity" className="table-input" type="number" min="1" step="1" value={quantity} onChange={event => setQuantity(event.target.value)} /> : formatQuantity(order.quantity)}</td>
-                  <td className="muted-cell">{new Date(order.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</td>
+                  <td className="muted-cell">{new Date(order.timestamp).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</td>
                   <td className="order-actions">
                     {editing ? (
                       <>

@@ -62,13 +62,15 @@ export default function App() {
   const myOrders = useMemo(() => snapshot.orders.filter(order => order.ownerId === TRADER_ID), [snapshot.orders]);
   const quote = snapshot.marketData.quotes[0];
 
-  async function runAction(action: () => Promise<string | void>, success: string) {
+  async function runAction(action: () => Promise<string | void>, success: string): Promise<boolean> {
     try {
       const resultMessage = await action();
       await refresh();
       setNotice({ kind: "success", message: resultMessage ?? success });
+      return true;
     } catch (error) {
       setNotice({ kind: "error", message: error instanceof Error ? error.message : "Action failed" });
+      return false;
     }
   }
 
@@ -107,10 +109,10 @@ export default function App() {
     }
   }
 
-  async function modify(id: string, price: number, quantity: number) {
+  async function modify(id: string, price: number, quantity: number): Promise<boolean> {
     setBusyOrderId(id);
     try {
-      await runAction(async () => {
+      return await runAction(async () => {
         const result = await modifyOrder(id, { price, quantity });
         return result.trades.length === 0
           ? undefined
@@ -123,7 +125,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Header symbol={SYMBOL} connected={connected} stats={stats} openOrderCount={myOrders.length} hasLiveQuote={quote !== undefined} />
+      <Header symbol={SYMBOL} connected={connected} loading={loading} stats={stats} openOrderCount={myOrders.length} hasLiveQuote={quote !== undefined} />
 
       {!connected && !loading && (
         <div className="connection-banner" role="alert">

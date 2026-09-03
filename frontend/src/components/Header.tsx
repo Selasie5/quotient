@@ -4,6 +4,7 @@ import { formatPrice, formatQuantity, type MarketStats } from "../market";
 interface HeaderProps {
   symbol: string;
   connected: boolean;
+  loading: boolean;
   stats: MarketStats;
   openOrderCount: number;
   hasLiveQuote: boolean;
@@ -12,6 +13,7 @@ interface HeaderProps {
 export function Header({
   symbol,
   connected,
+  loading,
   stats,
   openOrderCount,
   hasLiveQuote,
@@ -31,8 +33,8 @@ export function Header({
         </div>
 
         <div className="header-status">
-          <span className={`status-dot ${connected ? "is-online" : "is-offline"}`} />
-          <span>{connected ? "Engine online" : "Engine offline"}</span>
+          <span className={`status-dot ${loading ? "is-connecting" : connected ? "is-online" : "is-offline"}`} />
+          <span>{loading ? "Connecting" : connected ? "Engine online" : "Engine offline"}</span>
           <span className="status-divider" />
           <span className="feed-state">
             <Radio size={14} /> {hasLiveQuote ? "IEX quote" : "Local simulation"}
