@@ -20,7 +20,7 @@ uses the licensed IEX-TP feed rather than WebSockets.
 ## Architecture
 
 ```
-matchbook/
+quotient/
 ├── ts/
 │   ├── src/
 │   │   ├── order.ts             # Order model (id, side, type, price, qty, timestamp)
@@ -37,6 +37,7 @@ matchbook/
 │   │   └── MatchingEngine.cpp/.h
 │   ├── tests/
 │   └── benchmarks/               # Throughput/latency comparison vs. TS engine
+├── frontend/                      # React/Vite paper-trading workstation
 └── README.md
 ```
 
@@ -47,12 +48,13 @@ matchbook/
 - **TypeScript / Node.js** — primary implementation, used for all core logic and the API layer
 - **Vitest** — testing
 - **C++** — performance-focused port of `OrderBook` and `MatchingEngine` only, used to benchmark against the TS implementation
+- **React / Vite** — responsive trading simulator over the REST API
 
 ## Getting Started
 
 ```bash
 git clone https://github.com/Selasie5/quotient.git
-cd matchbook/ts
+cd quotient
 npm install
 npm test
 ```
@@ -92,6 +94,7 @@ Build and start the server with `npm run build` and `npm start`. The API exposes
 - `POST /orders`
 - `PATCH /orders/:id`
 - `DELETE /orders/:id`
+- `GET /orders`
 - `GET /book`
 - `GET /trades`
 - `GET /market-data?symbol=AAPL`
@@ -101,6 +104,17 @@ To enable the live IEX adapter, provide `IEX_SYMBOL`, `APCA_API_KEY_ID`, and
 `APCA_API_SECRET_KEY` in the environment. The current process owns one matching
 engine, so configure one symbol. Alpaca quote sizes are round lots and are
 converted to shares before synthetic bid/ask liquidity enters the engine.
+
+### Trading simulator
+
+Start the API in one terminal with `npm run build` followed by `npm start`. In a
+second terminal, run `npm --prefix frontend install` once and then
+`npm run frontend:dev`. Open `http://127.0.0.1:5173`.
+
+The workstation exposes order entry, a clickable depth ladder, a session-price
+trace, time and sales, seeded local liquidity, and authoritative open-order
+cancel/modify actions. See [`frontend/README.md`](frontend/README.md) for the
+workflow and deployment variables.
 
 ## Roadmap
 
@@ -114,7 +128,7 @@ converted to shares before synthetic bid/ask liquidity enters the engine.
 - [x] Live IEX quote/trade stream through Alpaca WebSocket
 - [x] C++ port of `OrderBook` and `MatchingEngine`, validated against equivalent behavior tests
 - [x] Benchmark: throughput and latency percentiles, TypeScript vs. C++
-- [ ] (Stretch) Minimal CLI or web UI to visualize live book state
+- [x] Responsive web trading simulator over the engine API
 
 ## Design Decisions
 
@@ -251,6 +265,31 @@ original shorter single-trial result remains available as
 but it is not used for the headline comparison. These figures are a project
 baseline rather than a universal language comparison; runtime variance,
 hardware, and workload shape all matter.
+
+### Trading workstation
+
+The browser is deliberately a thin client. It polls depth, executions, market
+data, and the new detached open-order snapshot, while all mutation requests go
+through the REST API. This prevents the interface from presenting locally
+invented order state that can diverge after a partial fill, modification, or
+self-trade-prevention event. Development uses Vite's same-origin `/api` proxy;
+deployments can provide `VITE_API_BASE_URL` instead of broadening API CORS by
+default.
+
+The visual system is derived from exchange terminals: dense borders-only
+surfaces, tabular IBM Plex figures, semantic bid/ask color, and a central spread
+rail that joins both halves of the depth ladder. Green and red communicate side
+or outcome rather than decorate the screen. High-frequency controls use only
+short color/opacity transitions and tactile press feedback, with a reduced-
+motion fallback.
+
+The correctness-first frontend imported each font weight's general stylesheet.
+The production build showed that this emitted 56 files totaling 676,540 bytes
+across unused language subsets. The follow-up optimization imports only the
+Latin subsets used by this interface, reducing output to 10 files and 196,816
+bytes (71% fewer font bytes) without changing the rendered typefaces. API
+polling remains intentionally straightforward until browser profiling shows a
+consolidated snapshot endpoint would justify its extra server contract.
 
 
 
