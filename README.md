@@ -145,6 +145,20 @@ cancel-incoming policy: it preserves any earlier third-party fills, leaves the
 self-owned resting order unchanged, and cancels the incoming remainder. Orders
 without an owner ID continue to match normally for backward compatibility.
 
+### Cancellation and modification lookup
+
+The correctness-first cancel/modify implementation located an order by scanning
+the bid and ask price levels. Once cancellation, repricing, and FIFO rules were
+covered by tests, `OrderBook` added a global `ordersById` index. Lookup is now
+O(1) instead of O(p) for `p` price levels. The index is updated on every add,
+full fill, dequeue, cancellation, and cancel-and-replace modification; lifecycle
+tests verify that completed IDs do not remain stale.
+
+Reducing quantity in place preserves time priority. Increasing quantity or
+changing price removes and re-enqueues the order, so it loses time priority.
+When repricing through `MatchingEngine`, the replacement goes through normal
+matching and therefore cannot leave the book crossed.
+
 
 
 ## License

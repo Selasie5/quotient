@@ -10,18 +10,20 @@ export interface OrderModification {
 export class OrderBook {
   private readonly bids = new BidBook();
   private readonly asks = new AskBook();
+  private readonly ordersById = new Map<string, Order>();
 
   addOrder(order: Order): void {
-    if (this.findOrder(order.id) !== undefined) {
+    if (this.ordersById.has(order.id)) {
       throw new Error(`Duplicate order ID: ${order.id}`);
     }
 
     if (order.side === "buy") {
       this.bids.addOrder(order);
-      return;
+    } else {
+      this.asks.addOrder(order);
     }
 
-    this.asks.addOrder(order);
+    this.ordersById.set(order.id, order);
   }
 
   bestBid(): number | undefined {
@@ -41,17 +43,24 @@ export class OrderBook {
   }
 
   dequeueBestBidOrder(): Order | undefined {
-    return this.bids.dequeueBestOrder();
+    const order = this.bids.dequeueBestOrder();
+    if (order !== undefined) this.ordersById.delete(order.id);
+    return order;
   }
 
   dequeueBestAskOrder(): Order | undefined {
-    return this.asks.dequeueBestOrder();
+    const order = this.asks.dequeueBestOrder();
+    if (order !== undefined) this.ordersById.delete(order.id);
+    return order;
   }
 
   removeOrder(order: Order): boolean {
-    return order.side === "buy"
+    const removed = order.side === "buy"
       ? this.bids.removeOrder(order)
       : this.asks.removeOrder(order);
+
+    if (removed) this.ordersById.delete(order.id);
+    return removed;
   }
 
   reduceOrderQuantity(order: Order, quantity: number): boolean {
@@ -61,7 +70,7 @@ export class OrderBook {
   }
 
   findOrder(orderId: string): Order | undefined {
-    return this.bids.findOrder(orderId) ?? this.asks.findOrder(orderId);
+    return this.ordersById.get(orderId);
   }
 
   cancelOrder(orderId: string): boolean {

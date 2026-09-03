@@ -258,4 +258,16 @@ describe("MatchingEngine simple match", () => {
     expect(engine.bestBid()).toBeUndefined();
     expect(engine.bestAsk()).toBeUndefined();
   });
+
+  test("releases a resting order ID after it is fully matched", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("reusable", "sell", 100));
+    engine.submitOrder(limitOrder("buy-1", "buy", 100));
+
+    expect(() =>
+      engine.submitOrder(limitOrder("reusable", "sell", 101)),
+    ).not.toThrow();
+    expect(engine.bestAsk()).toBe(101);
+  });
 });

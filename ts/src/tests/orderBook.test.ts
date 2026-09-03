@@ -159,4 +159,28 @@ describe("OrderBook", () => {
       quantity: 5,
     });
   });
+
+  test("releases an order ID after cancellation", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("reusable", "buy", 100));
+    expect(book.cancelOrder("reusable")).toBe(true);
+
+    expect(() =>
+      book.addOrder(limitOrder("reusable", "sell", 105)),
+    ).not.toThrow();
+    expect(book.bestAskOrder()?.id).toBe("reusable");
+  });
+
+  test("releases an order ID after best-order dequeue", () => {
+    const book = new OrderBook();
+
+    book.addOrder(limitOrder("reusable", "buy", 100));
+    expect(book.dequeueBestBidOrder()?.id).toBe("reusable");
+
+    expect(() =>
+      book.addOrder(limitOrder("reusable", "buy", 101)),
+    ).not.toThrow();
+    expect(book.bestBid()).toBe(101);
+  });
 });
