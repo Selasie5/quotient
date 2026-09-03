@@ -311,4 +311,17 @@ describe("MatchingEngine simple match", () => {
     expect(engine.getTrades()).toHaveLength(1);
     expect(engine.getTrades()[0].quantity).toBe(5);
   });
+
+  test("bounds the engine trade log while preserving newest-first retention", () => {
+    const engine = new MatchingEngine(1);
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100));
+    engine.submitOrder(limitOrder("buy-1", "buy", 100));
+    engine.submitOrder(limitOrder("sell-2", "sell", 101));
+    engine.submitOrder(limitOrder("buy-2", "buy", 101));
+
+    expect(engine.getTrades()).toMatchObject([
+      { price: 101, buyOrderId: "buy-2", sellOrderId: "sell-2" },
+    ]);
+  });
 });

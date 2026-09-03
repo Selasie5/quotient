@@ -2,14 +2,14 @@ import { IexMarketEvent, IexQuoteTick, IexTradeTick } from "./types";
 
 const IEX_WEBSOCKET_URL = "wss://stream.data.alpaca.markets/v2/iex";
 
-interface SocketMessageEvent {
-  data: unknown;
+interface SocketEvent {
+  data?: unknown;
 }
 
 interface MarketDataSocket {
   addEventListener(
-    type: "message",
-    listener: (event: SocketMessageEvent) => void,
+    type: "message" | "close",
+    listener: (event: SocketEvent) => void,
   ): void;
   send(data: string): void;
   close(): void;
@@ -22,10 +22,15 @@ export interface AlpacaIexClientOptions {
   onEvent: (event: IexMarketEvent) => void;
   onError?: (error: Error) => void;
   socketFactory?: (url: string) => MarketDataSocket;
+  reconnectBaseDelayMs?: number;
+  reconnectMaxDelayMs?: number;
 }
 
 export class AlpacaIexClient {
   private socket: MarketDataSocket | undefined;
+  private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+  private reconnectAttempt = 0;
+  private manuallyClosed = false;
 
   constructor(private readonly options: AlpacaIexClientOptions) {
     if (options.keyId.trim() === "" || options.secretKey.trim() === "") {
@@ -37,18 +42,44 @@ export class AlpacaIexClient {
   }
 
   connect(): void {
-    if (this.socket !== undefined) return;
-
-    const factory = this.options.socketFactory ?? defaultSocketFactory;
-    this.socket = factory(IEX_WEBSOCKET_URL);
-    this.socket.addEventListener("message", (event) => {
-      this.handleMessage(event.data);
-    });
+    this.manuallyClosed = false;
+    this.openSocket();
   }
 
   close(): void {
+    this.manuallyClosed = true;
+    if (this.reconnectTimer !== undefined) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
     this.socket?.close();
     this.socket = undefined;
+  }
+
+  private openSocket(): void {
+    if (this.socket !== undefined) return;
+
+    const factory = this.options.socketFactory ?? defaultSocketFactory;
+    const socket = factory(IEX_WEBSOCKET_URL);
+    this.socket = socket;
+    socket.addEventListener("message", (event) => {
+      this.handleMessage(event.data);
+    });
+    socket.addEventListener("close", () => {
+      if (this.socket === socket) this.socket = undefined;
+      if (!this.manuallyClosed) this.scheduleReconnect();
+    });
+  }
+
+  private scheduleReconnect(): void {
+    if (this.reconnectTimer !== undefined) return;
+
+    const baseDelay = this.options.reconnectBaseDelayMs ?? 1_000;
+    const maxDelay = this.options.reconnectMaxDelayMs ?? 30_000;
+    const delay = Math.min(baseDelay * 2 ** this.reconnectAttempt, maxDelay);
+    this.reconnectAttempt += 1;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = undefined;
+      this.openSocket();
+    }, delay);
   }
 
   private handleMessage(data: unknown): void {
@@ -77,6 +108,7 @@ export class AlpacaIexClient {
     }
 
     if (message.T === "success" && message.msg === "authenticated") {
+      this.reconnectAttempt = 0;
       const symbols = this.options.symbols.map((symbol) => symbol.toUpperCase());
       this.send({ action: "subscribe", trades: symbols, quotes: symbols });
       return;
@@ -110,7 +142,7 @@ function parseMarketEvent(message: Record<string, unknown>): IexMarketEvent | un
       typeof message.x !== "string" ||
       !isFiniteNumber(message.p) ||
       !isFiniteNumber(message.s) ||
-      typeof message.t !== "string"
+      !isTimestamp(message.t)
     ) return undefined;
 
     const trade: IexTradeTick = {
@@ -132,7 +164,7 @@ function parseMarketEvent(message: Record<string, unknown>): IexMarketEvent | un
       !isFiniteNumber(message.bs) ||
       !isFiniteNumber(message.ap) ||
       !isFiniteNumber(message.as) ||
-      typeof message.t !== "string"
+      !isTimestamp(message.t)
     ) return undefined;
 
     const quote: IexQuoteTick = {
@@ -156,4 +188,8 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value);
+}
+
+function isTimestamp(value: unknown): value is string {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
 }

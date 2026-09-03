@@ -4,10 +4,15 @@ import {
   IexTradeTick,
   MarketDataSnapshot,
 } from "./types";
+import { BoundedLog } from "../boundedLog";
 
 export class MarketDataStore {
   private readonly quotesBySymbol = new Map<string, IexQuoteTick>();
-  private readonly trades: IexTradeTick[] = [];
+  private readonly trades: BoundedLog<IexTradeTick>;
+
+  constructor(maxTrades = 1_000) {
+    this.trades = new BoundedLog(maxTrades);
+  }
 
   record(event: IexMarketEvent): void {
     if (event.type === "quote") {
@@ -15,7 +20,7 @@ export class MarketDataStore {
       return;
     }
 
-    this.trades.push({ ...event });
+    this.trades.append({ ...event });
   }
 
   snapshot(symbol?: string): MarketDataSnapshot {
@@ -25,9 +30,10 @@ export class MarketDataStore {
       : [this.quotesBySymbol.get(normalizedSymbol)].filter(
           (quote): quote is IexQuoteTick => quote !== undefined,
         );
+    const allTrades = this.trades.snapshot();
     const trades = normalizedSymbol === undefined
-      ? this.trades
-      : this.trades.filter((trade) => trade.symbol === normalizedSymbol);
+      ? allTrades
+      : allTrades.filter((trade) => trade.symbol === normalizedSymbol);
 
     return {
       quotes: quotes.map((quote) => ({ ...quote })),

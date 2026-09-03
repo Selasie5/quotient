@@ -1,11 +1,16 @@
 import { Order } from "./order";
 import { BookDepth } from "./bookDepth";
+import { BoundedLog } from "./boundedLog";
 import { OrderBook, OrderModification } from "./orderBook";
 import { createTrade, Trade } from "./trade";
 
 export class MatchingEngine {
   private readonly book = new OrderBook();
-  private readonly tradeLog: Trade[] = [];
+  private readonly tradeLog: BoundedLog<Trade>;
+
+  constructor(maxTradeLogSize = 10_000) {
+    this.tradeLog = new BoundedLog(maxTradeLogSize);
+  }
 
   submitOrder(incoming: Order): Trade[] {
     const trades: Trade[] = [];
@@ -45,7 +50,7 @@ export class MatchingEngine {
         incoming.side === "sell" ? incoming.id : resting.id,
       );
       trades.push(trade);
-      this.tradeLog.push(trade);
+      this.tradeLog.append(trade);
 
       remainingQuantity -= executedQuantity;
     }
@@ -120,7 +125,7 @@ export class MatchingEngine {
   }
 
   getTrades(): Trade[] {
-    return this.tradeLog.map((trade) => ({ ...trade }));
+    return this.tradeLog.snapshot().map((trade) => ({ ...trade }));
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {

@@ -4,6 +4,10 @@ A limit order book and matching engine that implements price-time priority match
 
 Core engine implemented in **TypeScript**, with a **C++ port of the matching core** for direct performance comparison.
 
+The optional live-data adapter consumes the IEX stock feed through Alpaca's
+WebSocket API. IEX's former public API is retired; direct IEX TOPS/DEEP access
+uses the licensed IEX-TP feed rather than WebSockets.
+
 ## Features
 
 - Limit orders (buy/sell at a specified price or better) and market orders (immediate execution at best available price)
@@ -81,6 +85,23 @@ const trades = engine.submitOrder(createOrder({
 console.log(trades);
 ```
 
+### REST API
+
+Build and start the server with `npm run build` and `npm start`. The API exposes:
+
+- `POST /orders`
+- `PATCH /orders/:id`
+- `DELETE /orders/:id`
+- `GET /book`
+- `GET /trades`
+- `GET /market-data?symbol=AAPL`
+- `GET /health`
+
+To enable the live IEX adapter, provide `IEX_SYMBOL`, `APCA_API_KEY_ID`, and
+`APCA_API_SECRET_KEY` in the environment. The current process owns one matching
+engine, so configure one symbol. Alpaca quote sizes are round lots and are
+converted to shares before synthetic bid/ask liquidity enters the engine.
+
 ## Roadmap
 
 - [x] `Order` / `Trade` data models with test coverage
@@ -89,7 +110,8 @@ console.log(trades);
 - [x] Cancel and modify
 - [x] Self-trade prevention and partial-fill remainder handling
 - [x] Book depth query
-- [ ] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
+- [x] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
+- [x] Live IEX quote/trade stream through Alpaca WebSocket
 - [ ] C++ port of `OrderBook` and `MatchingEngine`, validated against the TS test suite
 - [ ] Benchmark: orders/sec, TS vs. C++ implementation
 - [ ] (Stretch) Minimal CLI or web UI to visualize live book state
@@ -171,6 +193,25 @@ not add a cache: matching, cancellation, and modification are expected to be
 hotter than depth reads, and a cached view would add invalidation complexity to
 every mutation. If benchmarks later show repeated depth queries dominate, a
 versioned cache or ordered price index can be introduced behind the same API.
+
+### Live IEX market data
+
+IEX retired its public API in 2021. Its current direct TOPS and DEEP products use
+IEX-TP and require market-data agreements, so the WebSocket adapter uses
+Alpaca's `v2/iex` stream. Credentials are read only from environment variables.
+
+Quotes and reported trades have different semantics. A quote contains bid/ask
+prices and sizes, so the single configured symbol is represented as replaceable
+synthetic external liquidity and processed through the matching engine. A
+reported trade does not identify the aggressor side and therefore cannot be
+faithfully replayed as an order; it is retained as an external observation and
+served from `/market-data`, separately from engine executions in `/trades`.
+
+The correctness-first socket client connected once and retained every observed
+trade. The hardening pass adds bounded exponential reconnect backoff and stores
+trade histories in circular buffers (10,000 engine executions and 1,000 external
+ticks by default). This provides O(1) append with bounded memory so disconnects
+or an unbounded stream cannot degrade a long-running API process.
 
 
 

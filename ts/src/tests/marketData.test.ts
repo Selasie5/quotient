@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { MatchingEngine } from "../matchEngine";
 import { AlpacaIexClient } from "../marketData/alpacaIexClient";
 import { IexQuoteBridge } from "../marketData/iexQuoteBridge";
@@ -8,23 +8,34 @@ import { createOrder } from "../order";
 
 class FakeSocket {
   readonly sent: string[] = [];
-  private messageListener: ((event: { data: unknown }) => void) | undefined;
+  private messageListener: ((event: { data?: unknown }) => void) | undefined;
+  private closeListener: ((event: { data?: unknown }) => void) | undefined;
 
   addEventListener(
-    type: "message",
-    listener: (event: { data: unknown }) => void,
+    type: "message" | "close",
+    listener: (event: { data?: unknown }) => void,
   ): void {
-    if (type === "message") this.messageListener = listener;
+    if (type === "message") {
+      this.messageListener = listener;
+    } else {
+      this.closeListener = listener;
+    }
   }
 
   send(data: string): void {
     this.sent.push(data);
   }
 
-  close(): void {}
+  close(): void {
+    this.closeListener?.({});
+  }
 
   receive(messages: unknown[]): void {
     this.messageListener?.({ data: JSON.stringify(messages) });
+  }
+
+  disconnect(): void {
+    this.closeListener?.({});
   }
 }
 
@@ -80,6 +91,35 @@ describe("Alpaca IEX WebSocket client", () => {
         timestamp: "2026-01-01T10:00:01Z",
       },
     ]);
+  });
+
+  test("reconnects with backoff after an unexpected disconnect", async () => {
+    vi.useFakeTimers();
+    const sockets: FakeSocket[] = [];
+    const client = new AlpacaIexClient({
+      keyId: "key-id",
+      secretKey: "secret-key",
+      symbols: ["AAPL"],
+      onEvent: () => {},
+      socketFactory: () => {
+        const socket = new FakeSocket();
+        sockets.push(socket);
+        return socket;
+      },
+    });
+
+    try {
+      client.connect();
+      sockets[0].disconnect();
+
+      await vi.advanceTimersByTimeAsync(999);
+      expect(sockets).toHaveLength(1);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(sockets).toHaveLength(2);
+    } finally {
+      client.close();
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -150,5 +190,23 @@ describe("IEX market-data processing", () => {
         timestamp: "2026-01-01T10:00:02Z",
       }],
     });
+  });
+
+  test("bounds retained external trades to the configured capacity", () => {
+    const store = new MarketDataStore(2);
+    const trade = {
+      type: "trade" as const,
+      symbol: "AAPL",
+      exchange: "V",
+      price: 100,
+      size: 2,
+      timestamp: "2026-01-01T10:00:02Z",
+    };
+
+    store.record({ ...trade, tradeId: 1 });
+    store.record({ ...trade, tradeId: 2 });
+    store.record({ ...trade, tradeId: 3 });
+
+    expect(store.snapshot().trades.map(({ tradeId }) => tradeId)).toEqual([2, 3]);
   });
 });
