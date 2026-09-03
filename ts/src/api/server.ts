@@ -40,6 +40,11 @@ async function handleRequest(
       return;
     }
 
+    if (method === "GET" && url.pathname === "/orders") {
+      sendJson(response, 200, engine.getOpenOrders());
+      return;
+    }
+
     if (method === "GET" && url.pathname === "/market-data") {
       sendJson(response, 200, marketData.snapshot(url.searchParams.get("symbol") ?? undefined));
       return;

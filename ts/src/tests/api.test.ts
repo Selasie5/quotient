@@ -73,6 +73,11 @@ describe("REST API", () => {
     });
     expect(modified.status).toBe(200);
 
+    const openOrders = await fetch(`${baseUrl}/orders`);
+    expect(await openOrders.json()).toMatchObject([
+      { id: "buy-1", side: "buy", price: 101, quantity: 3 },
+    ]);
+
     const book = await fetch(`${baseUrl}/book`);
     expect(await book.json()).toEqual({
       bids: [{ price: 101, quantity: 3 }],

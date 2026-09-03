@@ -120,4 +120,10 @@ export class OrderBook {
       asks: this.asks.getDepth(),
     };
   }
+
+  getOrders(): Order[] {
+    return [...this.ordersById.values()]
+      .sort((left, right) => left.timestamp - right.timestamp || left.id.localeCompare(right.id))
+      .map((order) => ({ ...order }));
+  }
 }

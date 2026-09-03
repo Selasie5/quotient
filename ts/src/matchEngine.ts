@@ -124,6 +124,10 @@ export class MatchingEngine {
     return this.book.getDepth();
   }
 
+  getOpenOrders(): Order[] {
+    return this.book.getOrders();
+  }
+
   getTrades(): Trade[] {
     return this.tradeLog.snapshot().map((trade) => ({ ...trade }));
   }
