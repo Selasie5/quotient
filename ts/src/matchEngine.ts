@@ -6,10 +6,6 @@ export class MatchingEngine {
   private readonly book = new OrderBook();
 
   submitOrder(incoming: Order): Trade[] {
-    if (incoming.type !== "limit") {
-      throw new Error("Simple matching supports limit orders only");
-    }
-
     const trades: Trade[] = [];
     let remainingQuantity = incoming.quantity;
 
@@ -46,7 +42,7 @@ export class MatchingEngine {
       remainingQuantity -= executedQuantity;
     }
 
-    if (remainingQuantity > 0) {
+    if (remainingQuantity > 0 && incoming.type === "limit") {
       this.book.addOrder({ ...incoming, quantity: remainingQuantity });
     }
 
@@ -70,6 +66,8 @@ export class MatchingEngine {
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {
+    if (incoming.type === "market") return true;
+
     if (incoming.side === "buy") {
       return incoming.price! >= resting.price!;
     }

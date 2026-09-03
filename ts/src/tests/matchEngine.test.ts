@@ -11,6 +11,10 @@ function limitOrder(
   return createOrder({ id, type: "limit", side, price, quantity });
 }
 
+function marketOrder(id: string, side: Side, quantity: number) {
+  return createOrder({ id, type: "market", side, quantity });
+}
+
 describe("MatchingEngine simple match", () => {
   test("an incoming buy fully consumes one crossing ask", () => {
     const engine = new MatchingEngine();
@@ -106,5 +110,60 @@ describe("MatchingEngine simple match", () => {
     ]);
     expect(engine.bestAsk()).toBe(102);
     expect(engine.bestBidOrder()).toMatchObject({ id: "buy-1", quantity: 2 });
+  });
+
+  test("a market buy sweeps asks in price-time order", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-102", "sell", 102, 2));
+    engine.submitOrder(limitOrder("sell-100", "sell", 100, 2));
+    engine.submitOrder(limitOrder("sell-101", "sell", 101, 2));
+
+    const trades = engine.submitOrder(marketOrder("market-buy", "buy", 5));
+
+    expect(trades.map(({ price, quantity }) => ({ price, quantity }))).toEqual([
+      { price: 100, quantity: 2 },
+      { price: 101, quantity: 2 },
+      { price: 102, quantity: 1 },
+    ]);
+    expect(engine.bestAskOrder()).toMatchObject({ id: "sell-102", quantity: 1 });
+    expect(engine.bestBid()).toBeUndefined();
+  });
+
+  test("a market sell sweeps bids from highest to lowest", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("buy-100", "buy", 100, 2));
+    engine.submitOrder(limitOrder("buy-102", "buy", 102, 2));
+    engine.submitOrder(limitOrder("buy-101", "buy", 101, 2));
+
+    const trades = engine.submitOrder(marketOrder("market-sell", "sell", 4));
+
+    expect(trades.map(({ price, quantity }) => ({ price, quantity }))).toEqual([
+      { price: 102, quantity: 2 },
+      { price: 101, quantity: 2 },
+    ]);
+    expect(engine.bestBid()).toBe(100);
+    expect(engine.bestAsk()).toBeUndefined();
+  });
+
+  test("expires an unfilled market-order remainder", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100, 2));
+    const trades = engine.submitOrder(marketOrder("market-buy", "buy", 5));
+
+    expect(trades).toHaveLength(1);
+    expect(trades[0].quantity).toBe(2);
+    expect(engine.bestAsk()).toBeUndefined();
+    expect(engine.bestBid()).toBeUndefined();
+  });
+
+  test("an unfilled market order never rests on an empty book", () => {
+    const engine = new MatchingEngine();
+
+    expect(engine.submitOrder(marketOrder("market-buy", "buy", 5))).toEqual([]);
+    expect(engine.bestBid()).toBeUndefined();
+    expect(engine.bestAsk()).toBeUndefined();
   });
 });
