@@ -1,6 +1,7 @@
 param(
-  [int]$Operations = 200000,
-  [int]$BatchSize = 1000
+  [int]$Operations = 1000000,
+  [int]$BatchSize = 1000,
+  [int]$Trials = 5
 )
 
 $ErrorActionPreference = "Stop"
@@ -23,8 +24,25 @@ $ctestPath = Join-Path (Split-Path -Parent $cmakePath) "ctest.exe"
 cmd /c npm run build | Out-Host
 
 $cppExecutable = Join-Path $buildDirectory "Release\quotient_cpp_benchmark.exe"
-$cppResult = (& $cppExecutable $Operations $BatchSize | Out-String) | ConvertFrom-Json
-$typescriptResult = (& node (Join-Path $repoRoot "dist\benchmarks\matchingEngine.bench.js") $Operations $BatchSize | Out-String) | ConvertFrom-Json
+$typescriptExecutable = Join-Path $repoRoot "dist\benchmarks\matchingEngine.bench.js"
+$trialResults = @()
+for ($trial = 1; $trial -le $Trials; $trial++) {
+  if ($trial % 2 -eq 1) {
+    $cppResult = (& $cppExecutable $Operations $BatchSize | Out-String) | ConvertFrom-Json
+    $typescriptResult = (& node $typescriptExecutable $Operations $BatchSize | Out-String) | ConvertFrom-Json
+    $runOrder = @("cpp", "typescript")
+  } else {
+    $typescriptResult = (& node $typescriptExecutable $Operations $BatchSize | Out-String) | ConvertFrom-Json
+    $cppResult = (& $cppExecutable $Operations $BatchSize | Out-String) | ConvertFrom-Json
+    $runOrder = @("typescript", "cpp")
+  }
+
+  $trialResults += [ordered]@{
+    trial = $trial
+    run_order = $runOrder
+    results = @($cppResult, $typescriptResult)
+  }
+}
 
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 $fileTimestamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd-HHmmss")
@@ -40,10 +58,10 @@ $cpu = if ($null -ne $cpuRegistry -and -not [string]::IsNullOrWhiteSpace($cpuReg
   "unknown"
 }
 $os = [System.Environment]::OSVersion.VersionString
-$command = "powershell -NoProfile -ExecutionPolicy Bypass -File benchmarks/run.ps1 -Operations $Operations -BatchSize $BatchSize"
+$command = "powershell -NoProfile -ExecutionPolicy Bypass -File benchmarks/run.ps1 -Operations $Operations -BatchSize $BatchSize -Trials $Trials"
 
 $report = [ordered]@{
-  schema_version = 1
+  schema_version = 2
   timestamp_utc = $timestamp
   git_commit = $gitCommit
   git_dirty = $gitDirty
@@ -57,9 +75,10 @@ $report = [ordered]@{
   workload = [ordered]@{
     operations = $Operations
     batch_size = $BatchSize
+    trials = $Trials
     warmup_operations = 10000
   }
-  results = @($cppResult, $typescriptResult)
+  trials = $trialResults
 }
 
 $resultDirectory = Join-Path $repoRoot "benchmarks\results"

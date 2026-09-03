@@ -11,16 +11,18 @@ latency normalized to nanoseconds per submitted or cancelled order.
 - `cancel_by_id`: populate one batch across 100 price levels, then time only the
   cancellation of every order by ID. Each cancellation counts as one operation.
 
-Both binaries run 10,000 warmup operations before recording 200,000 operations
-in batches of 1,000 by default. Batched clocks reduce measurement overhead. The
-checksum must equal half the operations for `match_pairs` and all operations for
-`cancel_by_id`; this guards against dead-code or workload errors.
+Both binaries run 10,000 warmup operations before recording 1,000,000 operations
+in batches of 1,000 by default. The runner records five process-level trials and
+alternates which runtime executes first to reduce ordering and thermal bias.
+Batched clocks reduce measurement overhead. The checksum must equal half the
+operations for `match_pairs` and all operations for `cancel_by_id`; this guards
+against dead-code or workload errors.
 
 ## Interpretation
 
 Use a Release C++ build and the compiled JavaScript output. Run on an otherwise
-idle machine, repeat several times, and compare medians rather than treating one
-run as definitive. These are in-process engine measurements; they deliberately
+idle machine and compare the median of the recorded trials rather than selecting
+the fastest run. These are in-process engine measurements; they deliberately
 exclude HTTP, WebSocket, serialization, logging, and network latency.
 
 Result files should include the Git commit, UTC timestamp, OS, CPU, Node version,
