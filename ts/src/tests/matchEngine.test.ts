@@ -7,12 +7,18 @@ function limitOrder(
   side: Side,
   price: number,
   quantity = 5,
+  ownerId?: string,
 ) {
-  return createOrder({ id, type: "limit", side, price, quantity });
+  return createOrder({ id, ownerId, type: "limit", side, price, quantity });
 }
 
-function marketOrder(id: string, side: Side, quantity: number) {
-  return createOrder({ id, type: "market", side, quantity });
+function marketOrder(
+  id: string,
+  side: Side,
+  quantity: number,
+  ownerId?: string,
+) {
+  return createOrder({ id, ownerId, type: "market", side, quantity });
 }
 
 describe("MatchingEngine simple match", () => {
@@ -165,5 +171,50 @@ describe("MatchingEngine simple match", () => {
     expect(engine.submitOrder(marketOrder("market-buy", "buy", 5))).toEqual([]);
     expect(engine.bestBid()).toBeUndefined();
     expect(engine.bestAsk()).toBeUndefined();
+  });
+
+  test("cancels an incoming limit order before it trades with the same owner", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("resting-sell", "sell", 100, 5, "owner-a"));
+    const trades = engine.submitOrder(
+      limitOrder("incoming-buy", "buy", 100, 5, "owner-a"),
+    );
+
+    expect(trades).toEqual([]);
+    expect(engine.bestAskOrder()).toMatchObject({ id: "resting-sell", quantity: 5 });
+    expect(engine.bestBid()).toBeUndefined();
+  });
+
+  test("allows matching orders owned by different participants", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("resting-sell", "sell", 100, 5, "owner-a"));
+    const trades = engine.submitOrder(
+      limitOrder("incoming-buy", "buy", 100, 5, "owner-b"),
+    );
+
+    expect(trades).toHaveLength(1);
+    expect(engine.bestAsk()).toBeUndefined();
+  });
+
+  test("keeps earlier fills but cancels the remainder at a self-owned order", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("external-sell", "sell", 100, 2, "owner-b"));
+    engine.submitOrder(limitOrder("own-sell", "sell", 101, 4, "owner-a"));
+
+    const trades = engine.submitOrder(
+      marketOrder("incoming-buy", "buy", 6, "owner-a"),
+    );
+
+    expect(trades).toHaveLength(1);
+    expect(trades[0]).toMatchObject({
+      price: 100,
+      quantity: 2,
+      sellOrderId: "external-sell",
+    });
+    expect(engine.bestAskOrder()).toMatchObject({ id: "own-sell", quantity: 4 });
+    expect(engine.bestBid()).toBeUndefined();
   });
 });

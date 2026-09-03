@@ -45,4 +45,14 @@ describe("Order Details Test Suite", () =>
       quantity: 0,
     })).toThrow(/order quantity must be greater than 0/);
   });
+  test("given an empty owner ID, the order should be rejected", () => {
+    expect(() => createOrder({
+      id: "1",
+      ownerId: "   ",
+      type: "limit",
+      side: "buy",
+      price: 100,
+      quantity: 1,
+    })).toThrow(/ownerId cannot be empty/);
+  });
 });

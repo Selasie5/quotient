@@ -8,6 +8,7 @@ export class MatchingEngine {
   submitOrder(incoming: Order): Trade[] {
     const trades: Trade[] = [];
     let remainingQuantity = incoming.quantity;
+    let cancelledBySelfTradePrevention = false;
 
     while (remainingQuantity > 0) {
       const resting =
@@ -16,6 +17,11 @@ export class MatchingEngine {
           : this.book.bestBidOrder();
 
       if (resting === undefined || !this.pricesCross(incoming, resting)) break;
+
+      if (this.hasSameOwner(incoming, resting)) {
+        cancelledBySelfTradePrevention = true;
+        break;
+      }
 
       const executedQuantity = Math.min(
         remainingQuantity,
@@ -42,7 +48,11 @@ export class MatchingEngine {
       remainingQuantity -= executedQuantity;
     }
 
-    if (remainingQuantity > 0 && incoming.type === "limit") {
+    if (
+      remainingQuantity > 0 &&
+      incoming.type === "limit" &&
+      !cancelledBySelfTradePrevention
+    ) {
       this.book.addOrder({ ...incoming, quantity: remainingQuantity });
     }
 
@@ -73,5 +83,11 @@ export class MatchingEngine {
     }
 
     return incoming.price! <= resting.price!;
+  }
+
+  private hasSameOwner(incoming: Order, resting: Order): boolean {
+    return (
+      incoming.ownerId !== undefined && incoming.ownerId === resting.ownerId
+    );
   }
 }

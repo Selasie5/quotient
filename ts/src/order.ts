@@ -4,6 +4,7 @@ export type OrderType = 'limit' | 'market';
 
 export interface Order {
   id: string,
+  ownerId?: string,
   type: OrderType,
   side: Side,
   price?: number,
@@ -14,6 +15,7 @@ export interface Order {
 
 export interface CreateOrderInput{
   id: string,
+  ownerId?: string,
   type: OrderType,
   side: Side,
   price?: number,
@@ -23,6 +25,10 @@ export interface CreateOrderInput{
 
 
 export function createOrder(input: CreateOrderInput): Order {
+  if (input.ownerId !== undefined && input.ownerId.trim() === '') {
+    throw new Error("ownerId cannot be empty")
+  }
+
   if (input.quantity <= 0) {
     throw new Error ("order quantity must be greater than 0")
   }
@@ -34,6 +40,7 @@ export function createOrder(input: CreateOrderInput): Order {
   }
   return {
     id: input.id,
+    ownerId: input.ownerId,
     type: input.type,
     side: input.side,
     price: input.price ?? 0,
