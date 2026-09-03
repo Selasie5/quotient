@@ -86,9 +86,9 @@ console.log(trades);
 - [x] `Order` / `Trade` data models with test coverage
 - [x] Core matching loop for limit orders (exact match, partial fill, no match)
 - [x] Market orders
-- [ ] Cancel and modify
+- [x] Cancel and modify
 - [x] Self-trade prevention and partial-fill remainder handling
-- [ ] Book depth query
+- [x] Book depth query
 - [ ] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
 - [ ] C++ port of `OrderBook` and `MatchingEngine`, validated against the TS test suite
 - [ ] Benchmark: orders/sec, TS vs. C++ implementation
@@ -158,6 +158,19 @@ Reducing quantity in place preserves time priority. Increasing quantity or
 changing price removes and re-enqueues the order, so it loses time priority.
 When repricing through `MatchingEngine`, the replacement goes through normal
 matching and therefore cannot leave the book crossed.
+
+### Depth snapshots
+
+`getDepth()` returns detached bid and ask snapshots aggregated from each price
+level's running quantity. Bids are sorted highest first and asks lowest first;
+empty levels retained by lazy heap deletion are excluded.
+
+The correctness-first implementation rebuilds and sorts depth at query time in
+O(p log p) for `p` visible price levels. The post-commit review deliberately did
+not add a cache: matching, cancellation, and modification are expected to be
+hotter than depth reads, and a cached view would add invalidation complexity to
+every mutation. If benchmarks later show repeated depth queries dominate, a
+versioned cache or ordered price index can be introduced behind the same API.
 
 
 

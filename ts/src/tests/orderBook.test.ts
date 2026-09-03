@@ -218,4 +218,18 @@ describe("OrderBook", () => {
       asks: [{ price: 105, quantity: 3 }],
     });
   });
+
+  test("returns a depth snapshot that cannot mutate the book", () => {
+    const book = new OrderBook();
+    book.addOrder(limitOrder("bid-1", "buy", 100, 2));
+
+    const depth = book.getDepth();
+    depth.bids[0].quantity = 999;
+    depth.bids.push({ price: 200, quantity: 1 });
+
+    expect(book.getDepth()).toEqual({
+      bids: [{ price: 100, quantity: 2 }],
+      asks: [],
+    });
+  });
 });
