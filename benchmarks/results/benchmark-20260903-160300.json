@@ -1,0 +1,70 @@
+﻿{
+    "schema_version":  1,
+    "timestamp_utc":  "2026-09-03T16:03:00.814Z",
+    "git_commit":  "2ba67db0318ab2c3cedba6582f1236547bebb4ca",
+    "git_dirty":  false,
+    "system":  {
+                   "os":  "Microsoft Windows NT 10.0.26200.0",
+                   "cpu":  "Intel64 Family 6 Model 140 Stepping 1, GenuineIntel",
+                   "node":  "v22.12.0",
+                   "cpp_build":  "MSVC Release"
+               },
+    "workload":  {
+                     "operations":  200000,
+                     "batch_size":  1000,
+                     "warmup_operations":  10000
+                 },
+    "results":  [
+                    {
+                        "runtime":  "cpp",
+                        "metrics":  [
+                                        {
+                                            "scenario":  "match_pairs",
+                                            "operations":  200000,
+                                            "batch_size":  1000,
+                                            "throughput_ops_per_sec":  1912210.42,
+                                            "p50_ns_per_op":  458.60,
+                                            "p95_ns_per_op":  856.50,
+                                            "p99_ns_per_op":  1013.80,
+                                            "checksum":  100000
+                                        },
+                                        {
+                                            "scenario":  "cancel_by_id",
+                                            "operations":  200000,
+                                            "batch_size":  1000,
+                                            "throughput_ops_per_sec":  3379668.59,
+                                            "p50_ns_per_op":  235.70,
+                                            "p95_ns_per_op":  530.90,
+                                            "p99_ns_per_op":  694.60,
+                                            "checksum":  200000
+                                        }
+                                    ]
+                    },
+                    {
+                        "runtime":  "typescript",
+                        "node":  "v22.12.0",
+                        "metrics":  [
+                                        {
+                                            "scenario":  "match_pairs",
+                                            "operations":  200000,
+                                            "batch_size":  1000,
+                                            "throughput_ops_per_sec":  1263385.5701153723,
+                                            "p50_ns_per_op":  554.1,
+                                            "p95_ns_per_op":  2396.6,
+                                            "p99_ns_per_op":  3321.1,
+                                            "checksum":  100000
+                                        },
+                                        {
+                                            "scenario":  "cancel_by_id",
+                                            "operations":  200000,
+                                            "batch_size":  1000,
+                                            "throughput_ops_per_sec":  3333833.408344585,
+                                            "p50_ns_per_op":  262.8,
+                                            "p95_ns_per_op":  443.6,
+                                            "p99_ns_per_op":  775.9,
+                                            "checksum":  200000
+                                        }
+                                    ]
+                    }
+                ]
+}

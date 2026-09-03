@@ -24,4 +24,6 @@ run as definitive. These are in-process engine measurements; they deliberately
 exclude HTTP, WebSocket, serialization, logging, and network latency.
 
 Result files should include the Git commit, UTC timestamp, OS, CPU, Node version,
-compiler, command, and raw metrics so changes remain reproducible and reviewable.
+compiler/build mode, exact runner command, and raw metrics so changes remain
+reproducible and reviewable. Only compare files whose `git_dirty` value is
+`false`; otherwise the recorded commit does not fully identify the code tested.

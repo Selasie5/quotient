@@ -30,18 +30,24 @@ $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 $fileTimestamp = (Get-Date).ToUniversalTime().ToString("yyyyMMdd-HHmmss")
 $gitCommit = (git -C $repoRoot rev-parse HEAD).Trim()
 $gitDirty = -not [string]::IsNullOrWhiteSpace((git -C $repoRoot status --porcelain | Out-String))
-$cpu = if ([string]::IsNullOrWhiteSpace($env:PROCESSOR_IDENTIFIER)) {
-  "unknown"
-} else {
+$cpuRegistryPath = "HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor\0"
+$cpuRegistry = Get-ItemProperty -LiteralPath $cpuRegistryPath -ErrorAction SilentlyContinue
+$cpu = if ($null -ne $cpuRegistry -and -not [string]::IsNullOrWhiteSpace($cpuRegistry.ProcessorNameString)) {
+  $cpuRegistry.ProcessorNameString.Trim()
+} elseif (-not [string]::IsNullOrWhiteSpace($env:PROCESSOR_IDENTIFIER)) {
   $env:PROCESSOR_IDENTIFIER
+} else {
+  "unknown"
 }
 $os = [System.Environment]::OSVersion.VersionString
+$command = "powershell -NoProfile -ExecutionPolicy Bypass -File benchmarks/run.ps1 -Operations $Operations -BatchSize $BatchSize"
 
 $report = [ordered]@{
   schema_version = 1
   timestamp_utc = $timestamp
   git_commit = $gitCommit
   git_dirty = $gitDirty
+  command = $command
   system = [ordered]@{
     os = $os
     cpu = $cpu

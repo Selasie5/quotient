@@ -113,7 +113,7 @@ converted to shares before synthetic bid/ask liquidity enters the engine.
 - [x] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
 - [x] Live IEX quote/trade stream through Alpaca WebSocket
 - [x] C++ port of `OrderBook` and `MatchingEngine`, validated against equivalent behavior tests
-- [ ] Benchmark: throughput and latency percentiles, TypeScript vs. C++
+- [x] Benchmark: throughput and latency percentiles, TypeScript vs. C++
 - [ ] (Stretch) Minimal CLI or web UI to visualize live book state
 
 ## Design Decisions
@@ -229,6 +229,23 @@ records throughput and p50/p95/p99 batch latency, correctness checksums, Git
 state, workload parameters, and machine/runtime metadata in `benchmarks/results`.
 The exact workload definitions and interpretation limits are documented in
 [`benchmarks/README.md`](benchmarks/README.md).
+
+The first clean-state baseline (`2ba67db`, 200,000 operations per workload) is
+stored in
+[`benchmark-20260903-160300.json`](benchmarks/results/benchmark-20260903-160300.json):
+
+| Workload | Runtime | Throughput (ops/s) | p50 (ns/op) | p95 (ns/op) | p99 (ns/op) |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Match pairs | C++ | 1,912,210 | 458.6 | 856.5 | 1,013.8 |
+| Match pairs | TypeScript | 1,263,386 | 554.1 | 2,396.6 | 3,321.1 |
+| Cancel by ID | C++ | 3,379,669 | 235.7 | 530.9 | 694.6 |
+| Cancel by ID | TypeScript | 3,333,833 | 262.8 | 443.6 | 775.9 |
+
+On this run, C++ delivered 1.51x the matching throughput. Cancellation
+throughput was within 1.4%, so the result does not support claiming a material
+native advantage for that workload. These figures are a baseline rather than a
+universal language comparison; process startup, runtime variance, hardware, and
+workload shape all matter.
 
 
 
