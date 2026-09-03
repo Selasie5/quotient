@@ -53,4 +53,10 @@ export class AskBook {
 
     return this.levels.get(price)!.peekFront();
   }
+
+  removeOrder(order: Order): boolean {
+    if (order.price === undefined) return false;
+
+    return this.levels.get(order.price)?.cancelOrder(order.id) ?? false;
+  }
 }

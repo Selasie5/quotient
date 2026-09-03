@@ -78,4 +78,17 @@ describe("OrderBook", () => {
 
     expect(book.bestAsk()).toBe(100);
   });
+
+  test("removes a selected order directly without disturbing its price level", () => {
+    const book = new OrderBook();
+    const first = limitOrder("first", "sell", 100);
+    const second = limitOrder("second", "sell", 100);
+
+    book.addOrder(first);
+    book.addOrder(second);
+
+    expect(book.removeOrder(first)).toBe(true);
+    expect(book.bestAskOrder()?.id).toBe("second");
+    expect(book.removeOrder(first)).toBe(false);
+  });
 });

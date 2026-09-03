@@ -38,4 +38,10 @@ export class OrderBook {
   dequeueBestAskOrder(): Order | undefined {
     return this.asks.dequeueBestOrder();
   }
+
+  removeOrder(order: Order): boolean {
+    return order.side === "buy"
+      ? this.bids.removeOrder(order)
+      : this.asks.removeOrder(order);
+  }
 }

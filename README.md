@@ -95,6 +95,15 @@ the top until it reaches a non-empty one. Each stale heap entry is discarded at
 most once, so cleanup is amortized across price-level insertions without the
 extra position bookkeeping required by an indexed heap.
 
+### Exact-size matching removal
+
+The first simple matcher selected the best resting order and then asked the book
+to resolve the best price again when dequeueing it. Once the matching behavior
+was covered by tests, removal was changed to use the selected order's side,
+price, and ID directly. `PriceLevel` already indexes its order nodes by ID, so
+the selected order is removed in O(1) without a second top-of-book lookup. Empty
+price levels remain in their heaps until the existing lazy cleanup runs.
+
 
 
 ## License

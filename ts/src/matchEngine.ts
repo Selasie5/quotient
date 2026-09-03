@@ -24,10 +24,8 @@ export class MatchingEngine {
       throw new Error("Simple matching requires equal order quantities");
     }
 
-    if (incoming.side === "buy") {
-      this.book.dequeueBestAskOrder();
-    } else {
-      this.book.dequeueBestBidOrder();
+    if (!this.book.removeOrder(resting)) {
+      throw new Error(`Resting order ${resting.id} could not be removed`);
     }
 
     return createTrade(
