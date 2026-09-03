@@ -1,0 +1,321 @@
+﻿{
+    "schema_version":  2,
+    "timestamp_utc":  "2026-09-03T16:29:51.120Z",
+    "git_commit":  "ae8b9856d0e65f214ad641b1bb5233b9452b8df8",
+    "git_dirty":  false,
+    "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File benchmarks/run.ps1 -Operations 1000000 -BatchSize 1000 -Trials 5",
+    "system":  {
+                   "os":  "Microsoft Windows NT 10.0.26200.0",
+                   "cpu":  "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz",
+                   "node":  "v22.12.0",
+                   "cpp_build":  "MSVC Release"
+               },
+    "workload":  {
+                     "operations":  1000000,
+                     "batch_size":  1000,
+                     "trials":  5,
+                     "warmup_operations":  10000
+                 },
+    "trials":  [
+                   {
+                       "trial":  1,
+                       "run_order":  [
+                                         "cpp",
+                                         "typescript"
+                                     ],
+                       "results":  [
+                                       {
+                                           "runtime":  "cpp",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2692246.60,
+                                                               "p50_ns_per_op":  333.20,
+                                                               "p95_ns_per_op":  578.70,
+                                                               "p99_ns_per_op":  670.20,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5170497.14,
+                                                               "p50_ns_per_op":  178.10,
+                                                               "p95_ns_per_op":  285.90,
+                                                               "p99_ns_per_op":  359.40,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       },
+                                       {
+                                           "runtime":  "typescript",
+                                           "node":  "v22.12.0",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2187380.6510432274,
+                                                               "p50_ns_per_op":  305.1,
+                                                               "p95_ns_per_op":  755.3,
+                                                               "p99_ns_per_op":  3250.3,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  4895586.9221249195,
+                                                               "p50_ns_per_op":  172.9,
+                                                               "p95_ns_per_op":  295.6,
+                                                               "p99_ns_per_op":  647.8,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       }
+                                   ]
+                   },
+                   {
+                       "trial":  2,
+                       "run_order":  [
+                                         "typescript",
+                                         "cpp"
+                                     ],
+                       "results":  [
+                                       {
+                                           "runtime":  "cpp",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  3127956.90,
+                                                               "p50_ns_per_op":  301.80,
+                                                               "p95_ns_per_op":  442.50,
+                                                               "p99_ns_per_op":  562.40,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5791102.20,
+                                                               "p50_ns_per_op":  159.60,
+                                                               "p95_ns_per_op":  266.10,
+                                                               "p99_ns_per_op":  326.50,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       },
+                                       {
+                                           "runtime":  "typescript",
+                                           "node":  "v22.12.0",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2399994.048014761,
+                                                               "p50_ns_per_op":  287.8,
+                                                               "p95_ns_per_op":  742.4,
+                                                               "p99_ns_per_op":  2764.9,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5512615.344585316,
+                                                               "p50_ns_per_op":  165.7,
+                                                               "p95_ns_per_op":  245.5,
+                                                               "p99_ns_per_op":  372.4,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       }
+                                   ]
+                   },
+                   {
+                       "trial":  3,
+                       "run_order":  [
+                                         "cpp",
+                                         "typescript"
+                                     ],
+                       "results":  [
+                                       {
+                                           "runtime":  "cpp",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  3103592.00,
+                                                               "p50_ns_per_op":  296.40,
+                                                               "p95_ns_per_op":  493.10,
+                                                               "p99_ns_per_op":  571.90,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5794864.13,
+                                                               "p50_ns_per_op":  156.30,
+                                                               "p95_ns_per_op":  272.80,
+                                                               "p99_ns_per_op":  342.60,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       },
+                                       {
+                                           "runtime":  "typescript",
+                                           "node":  "v22.12.0",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2371381.0354018733,
+                                                               "p50_ns_per_op":  278.9,
+                                                               "p95_ns_per_op":  726.9,
+                                                               "p99_ns_per_op":  2975.3,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  4951975.739280459,
+                                                               "p50_ns_per_op":  173,
+                                                               "p95_ns_per_op":  295.8,
+                                                               "p99_ns_per_op":  737.1,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       }
+                                   ]
+                   },
+                   {
+                       "trial":  4,
+                       "run_order":  [
+                                         "typescript",
+                                         "cpp"
+                                     ],
+                       "results":  [
+                                       {
+                                           "runtime":  "cpp",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2675847.32,
+                                                               "p50_ns_per_op":  356.60,
+                                                               "p95_ns_per_op":  506.00,
+                                                               "p99_ns_per_op":  620.40,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5154386.77,
+                                                               "p50_ns_per_op":  185.80,
+                                                               "p95_ns_per_op":  280.80,
+                                                               "p99_ns_per_op":  359.30,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       },
+                                       {
+                                           "runtime":  "typescript",
+                                           "node":  "v22.12.0",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2188043.5236865557,
+                                                               "p50_ns_per_op":  327.8,
+                                                               "p95_ns_per_op":  802.9,
+                                                               "p99_ns_per_op":  3112.7,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  4264537.809392218,
+                                                               "p50_ns_per_op":  206.9,
+                                                               "p95_ns_per_op":  360.8,
+                                                               "p99_ns_per_op":  493.2,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       }
+                                   ]
+                   },
+                   {
+                       "trial":  5,
+                       "run_order":  [
+                                         "cpp",
+                                         "typescript"
+                                     ],
+                       "results":  [
+                                       {
+                                           "runtime":  "cpp",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2807071.12,
+                                                               "p50_ns_per_op":  336.90,
+                                                               "p95_ns_per_op":  502.50,
+                                                               "p99_ns_per_op":  605.60,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  5147400.97,
+                                                               "p50_ns_per_op":  182.20,
+                                                               "p95_ns_per_op":  298.00,
+                                                               "p99_ns_per_op":  370.10,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       },
+                                       {
+                                           "runtime":  "typescript",
+                                           "node":  "v22.12.0",
+                                           "metrics":  [
+                                                           {
+                                                               "scenario":  "match_pairs",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  2084531.5046711224,
+                                                               "p50_ns_per_op":  332.6,
+                                                               "p95_ns_per_op":  874.6,
+                                                               "p99_ns_per_op":  3160.3,
+                                                               "checksum":  500000
+                                                           },
+                                                           {
+                                                               "scenario":  "cancel_by_id",
+                                                               "operations":  1000000,
+                                                               "batch_size":  1000,
+                                                               "throughput_ops_per_sec":  4241884.109181006,
+                                                               "p50_ns_per_op":  207,
+                                                               "p95_ns_per_op":  369.8,
+                                                               "p99_ns_per_op":  621.3,
+                                                               "checksum":  1000000
+                                                           }
+                                                       ]
+                                       }
+                                   ]
+                   }
+               ]
+}

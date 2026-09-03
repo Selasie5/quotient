@@ -230,22 +230,27 @@ state, workload parameters, and machine/runtime metadata in `benchmarks/results`
 The exact workload definitions and interpretation limits are documented in
 [`benchmarks/README.md`](benchmarks/README.md).
 
-The first clean-state baseline (`2ba67db`, 200,000 operations per workload) is
-stored in
-[`benchmark-20260903-160300.json`](benchmarks/results/benchmark-20260903-160300.json):
+The current clean-state baseline (`ae8b985`, five trials of 1,000,000 operations
+per workload) is stored in
+[`benchmark-20260903-162951.json`](benchmarks/results/benchmark-20260903-162951.json).
+Each value below is the median of the five trials; the throughput range exposes
+run-to-run variance instead of hiding it.
 
-| Workload | Runtime | Throughput (ops/s) | p50 (ns/op) | p95 (ns/op) | p99 (ns/op) |
+| Workload | Runtime | Throughput median (range), ops/s | p50 (ns/op) | p95 (ns/op) | p99 (ns/op) |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Match pairs | C++ | 1,912,210 | 458.6 | 856.5 | 1,013.8 |
-| Match pairs | TypeScript | 1,263,386 | 554.1 | 2,396.6 | 3,321.1 |
-| Cancel by ID | C++ | 3,379,669 | 235.7 | 530.9 | 694.6 |
-| Cancel by ID | TypeScript | 3,333,833 | 262.8 | 443.6 | 775.9 |
+| Match pairs | C++ | 2,807,071 (2,675,847-3,127,957) | 333.2 | 502.5 | 605.6 |
+| Match pairs | TypeScript | 2,188,044 (2,084,532-2,399,994) | 305.1 | 755.3 | 3,112.7 |
+| Cancel by ID | C++ | 5,170,497 (5,147,401-5,794,864) | 178.1 | 280.8 | 359.3 |
+| Cancel by ID | TypeScript | 4,895,587 (4,241,884-5,512,615) | 173.0 | 295.8 | 621.3 |
 
-On this run, C++ delivered 1.51x the matching throughput. Cancellation
-throughput was within 1.4%, so the result does not support claiming a material
-native advantage for that workload. These figures are a baseline rather than a
-universal language comparison; process startup, runtime variance, hardware, and
-workload shape all matter.
+C++ delivered 1.28x the median matching throughput and markedly tighter
+matching-tail latency. Cancellation throughput was only 1.06x higher, so this
+result does not support claiming a material native advantage there. The
+original shorter single-trial result remains available as
+[`benchmark-20260903-160300.json`](benchmarks/results/benchmark-20260903-160300.json),
+but it is not used for the headline comparison. These figures are a project
+baseline rather than a universal language comparison; runtime variance,
+hardware, and workload shape all matter.
 
 
 
