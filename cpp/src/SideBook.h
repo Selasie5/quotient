@@ -48,16 +48,6 @@ class SideBook {
     return price.has_value() ? levels_.at(*price).front() : nullptr;
   }
 
-  const Order* find(const std::string& order_id) const {
-    for (const auto& [price, level] : levels_) {
-      static_cast<void>(price);
-      if (const Order* order = level.find(order_id); order != nullptr) {
-        return order;
-      }
-    }
-    return nullptr;
-  }
-
   bool remove(const Order& order) {
     if (!order.price.has_value()) return false;
     const auto level = levels_.find(*order.price);

@@ -20,11 +20,6 @@ Order* PriceLevel::front() {
   return orders_.empty() ? nullptr : &orders_.front();
 }
 
-const Order* PriceLevel::find(const std::string& order_id) const {
-  const auto found = orders_by_id_.find(order_id);
-  return found == orders_by_id_.end() ? nullptr : &*found->second;
-}
-
 bool PriceLevel::remove(const std::string& order_id) {
   const auto found = orders_by_id_.find(order_id);
   if (found == orders_by_id_.end()) return false;

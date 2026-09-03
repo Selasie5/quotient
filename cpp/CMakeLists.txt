@@ -22,3 +22,6 @@ enable_testing()
 add_executable(quotient_cpp_tests tests/order_book_tests.cpp)
 target_link_libraries(quotient_cpp_tests PRIVATE quotient_core)
 add_test(NAME quotient_cpp_tests COMMAND quotient_cpp_tests)
+
+add_executable(quotient_cpp_benchmark benchmarks/benchmark.cpp)
+target_link_libraries(quotient_cpp_benchmark PRIVATE quotient_core)

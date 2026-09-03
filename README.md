@@ -112,8 +112,8 @@ converted to shares before synthetic bid/ask liquidity enters the engine.
 - [x] Book depth query
 - [x] Trade log + minimal REST API (`POST /orders`, `DELETE /orders/:id`, `GET /book`)
 - [x] Live IEX quote/trade stream through Alpaca WebSocket
-- [ ] C++ port of `OrderBook` and `MatchingEngine`, validated against the TS test suite
-- [ ] Benchmark: orders/sec, TS vs. C++ implementation
+- [x] C++ port of `OrderBook` and `MatchingEngine`, validated against equivalent behavior tests
+- [ ] Benchmark: throughput and latency percentiles, TypeScript vs. C++
 - [ ] (Stretch) Minimal CLI or web UI to visualize live book state
 
 ## Design Decisions
@@ -212,6 +212,23 @@ trade. The hardening pass adds bounded exponential reconnect backoff and stores
 trade histories in circular buffers (10,000 engine executions and 1,000 external
 ticks by default). This provides O(1) append with bounded memory so disconnects
 or an unbounded stream cannot degrade a long-running API process.
+
+### C++ port and benchmark methodology
+
+The native port was implemented and committed first with scan-based order-ID
+lookup. Its parity suite covers the TypeScript engine's observable matching,
+priority, cancellation, modification, depth, self-trade, lazy-deletion, and
+trade-log behavior. The follow-up optimization adds a global ID-to-order index.
+Orders live in `std::list` nodes inside price levels, whose addresses remain
+stable while the book's hash maps rehash, making indexed lookup and cancellation
+O(1) without sacrificing FIFO order.
+
+`npm run benchmark` builds C++ with MSVC Release settings and compiles the
+TypeScript implementation before running identical deterministic workloads. It
+records throughput and p50/p95/p99 batch latency, correctness checksums, Git
+state, workload parameters, and machine/runtime metadata in `benchmarks/results`.
+The exact workload definitions and interpretation limits are documented in
+[`benchmarks/README.md`](benchmarks/README.md).
 
 
 

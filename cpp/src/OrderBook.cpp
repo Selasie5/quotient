@@ -7,18 +7,18 @@ namespace quotient {
 
 Order& OrderBook::add(Order order) {
   validate_order(order);
-  if (find(order.id) != nullptr) {
+  if (orders_by_id_.contains(order.id)) {
     throw std::invalid_argument("duplicate order id: " + order.id);
   }
-  return order.side == Side::Buy ? bids_.add(std::move(order))
-                                 : asks_.add(std::move(order));
+  Order& stored = order.side == Side::Buy ? bids_.add(std::move(order))
+                                          : asks_.add(std::move(order));
+  orders_by_id_.emplace(stored.id, &stored);
+  return stored;
 }
 
 Order* OrderBook::find(const std::string& order_id) {
-  if (const Order* order = bids_.find(order_id); order != nullptr) {
-    return const_cast<Order*>(order);
-  }
-  return const_cast<Order*>(asks_.find(order_id));
+  const auto found = orders_by_id_.find(order_id);
+  return found == orders_by_id_.end() ? nullptr : found->second;
 }
 
 Order* OrderBook::best_bid_order() { return bids_.best_order(); }
@@ -27,7 +27,10 @@ std::optional<double> OrderBook::best_bid() { return bids_.best_price(); }
 std::optional<double> OrderBook::best_ask() { return asks_.best_price(); }
 
 bool OrderBook::remove(const Order& order) {
-  return order.side == Side::Buy ? bids_.remove(order) : asks_.remove(order);
+  const bool removed = order.side == Side::Buy ? bids_.remove(order)
+                                                : asks_.remove(order);
+  if (removed) orders_by_id_.erase(order.id);
+  return removed;
 }
 
 bool OrderBook::reduce(const Order& order, std::uint64_t quantity) {

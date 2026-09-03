@@ -132,6 +132,16 @@ void test_aggressive_repricing_matches() {
           "repriced match must not leave a crossed book");
 }
 
+void test_order_index_lifecycle() {
+  MatchingEngine engine;
+  engine.submit(limit("reusable", Side::Sell, 100, 1));
+  engine.submit(limit("buyer", Side::Buy, 100, 1));
+  engine.submit(limit("reusable", Side::Sell, 101, 1));
+  require(engine.best_ask() == 101,
+          "a fully matched id must be reusable without a stale index entry");
+  require(engine.cancel("reusable"), "reused id must remain cancellable");
+}
+
 }  // namespace
 
 int main() {
@@ -144,6 +154,7 @@ int main() {
     test_market_remainder_expires();
     test_duplicate_ids_and_lazy_reactivation();
     test_aggressive_repricing_matches();
+    test_order_index_lifecycle();
     std::cout << "All C++ order-book tests passed\n";
     return EXIT_SUCCESS;
   } catch (const std::exception& error) {

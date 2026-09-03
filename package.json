@@ -8,7 +8,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "ts-node ts/src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "benchmark:ts": "npm run build && node dist/benchmarks/matchingEngine.bench.js",
+    "benchmark": "powershell -NoProfile -ExecutionPolicy Bypass -File benchmarks/run.ps1"
   },
   "keywords": [],
   "author": "",

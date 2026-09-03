@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace quotient {
@@ -37,6 +38,7 @@ class OrderBook {
  private:
   BidBook bids_;
   AskBook asks_;
+  std::unordered_map<std::string, Order*> orders_by_id_;
 };
 
 }  // namespace quotient

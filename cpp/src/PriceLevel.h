@@ -13,7 +13,6 @@ class PriceLevel {
  public:
   Order& enqueue(Order order);
   Order* front();
-  const Order* find(const std::string& order_id) const;
   bool remove(const std::string& order_id);
   bool reduce(const std::string& order_id, std::uint64_t quantity);
   [[nodiscard]] bool empty() const noexcept;
