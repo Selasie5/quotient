@@ -2,19 +2,22 @@ import { createServer, IncomingMessage, Server, ServerResponse } from "node:http
 import { MatchingEngine } from "../matchEngine";
 import { createOrder, CreateOrderInput } from "../order";
 import { OrderModification } from "../orderBook";
+import { MarketDataStore } from "../marketData/store";
 
 const MAX_BODY_BYTES = 1_000_000;
 
 export function createApiServer(
   engine: MatchingEngine = new MatchingEngine(),
+  marketData: MarketDataStore = new MarketDataStore(),
 ): Server {
   return createServer((request, response) => {
-    void handleRequest(engine, request, response);
+    void handleRequest(engine, marketData, request, response);
   });
 }
 
 async function handleRequest(
   engine: MatchingEngine,
+  marketData: MarketDataStore,
   request: IncomingMessage,
   response: ServerResponse,
 ): Promise<void> {
@@ -34,6 +37,11 @@ async function handleRequest(
 
     if (method === "GET" && url.pathname === "/trades") {
       sendJson(response, 200, engine.getTrades());
+      return;
+    }
+
+    if (method === "GET" && url.pathname === "/market-data") {
+      sendJson(response, 200, marketData.snapshot(url.searchParams.get("symbol") ?? undefined));
       return;
     }
 

@@ -1,6 +1,7 @@
 import { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createApiServer } from "../api/server";
+import { MarketDataStore } from "../marketData/store";
 
 describe("REST API", () => {
   let baseUrl: string;
@@ -99,6 +100,32 @@ describe("REST API", () => {
       method: "DELETE",
     });
     expect(missing.status).toBe(404);
+  });
+
+  test("exposes observed external market data", async () => {
+    const marketData = new MarketDataStore();
+    marketData.record({
+      type: "trade",
+      symbol: "AAPL",
+      tradeId: 1,
+      exchange: "V",
+      price: 100,
+      size: 2,
+      timestamp: "2026-01-01T10:00:00Z",
+    });
+
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+    server = createApiServer(undefined, marketData);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address() as AddressInfo;
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const response = await fetch(`${baseUrl}/market-data?symbol=AAPL`);
+    const result = await response.json() as { trades: unknown[] };
+
+    expect(result.trades).toHaveLength(1);
   });
 
   function postOrder(body: Record<string, unknown>) {
