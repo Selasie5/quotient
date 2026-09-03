@@ -282,4 +282,33 @@ describe("MatchingEngine simple match", () => {
       asks: [{ price: 100, quantity: 5 }],
     });
   });
+
+  test("records every execution in chronological trade order", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-100", "sell", 100, 2));
+    engine.submitOrder(limitOrder("sell-101", "sell", 101, 3));
+    engine.submitOrder(limitOrder("buy-1", "buy", 101, 5));
+
+    expect(
+      engine.getTrades().map(({ price, quantity }) => ({ price, quantity })),
+    ).toEqual([
+      { price: 100, quantity: 2 },
+      { price: 101, quantity: 3 },
+    ]);
+  });
+
+  test("returns a detached trade log snapshot", () => {
+    const engine = new MatchingEngine();
+
+    engine.submitOrder(limitOrder("sell-1", "sell", 100));
+    engine.submitOrder(limitOrder("buy-1", "buy", 100));
+
+    const trades = engine.getTrades();
+    trades[0].quantity = 999;
+    trades.push({ ...trades[0], price: 999 });
+
+    expect(engine.getTrades()).toHaveLength(1);
+    expect(engine.getTrades()[0].quantity).toBe(5);
+  });
 });

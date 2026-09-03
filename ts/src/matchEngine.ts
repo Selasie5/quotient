@@ -5,6 +5,7 @@ import { createTrade, Trade } from "./trade";
 
 export class MatchingEngine {
   private readonly book = new OrderBook();
+  private readonly tradeLog: Trade[] = [];
 
   submitOrder(incoming: Order): Trade[] {
     const trades: Trade[] = [];
@@ -37,14 +38,14 @@ export class MatchingEngine {
         throw new Error(`Resting order ${resting.id} could not be reduced`);
       }
 
-      trades.push(
-        createTrade(
-          resting.price!,
-          executedQuantity,
-          incoming.side === "buy" ? incoming.id : resting.id,
-          incoming.side === "sell" ? incoming.id : resting.id,
-        ),
+      const trade = createTrade(
+        resting.price!,
+        executedQuantity,
+        incoming.side === "buy" ? incoming.id : resting.id,
+        incoming.side === "sell" ? incoming.id : resting.id,
       );
+      trades.push(trade);
+      this.tradeLog.push(trade);
 
       remainingQuantity -= executedQuantity;
     }
@@ -116,6 +117,10 @@ export class MatchingEngine {
 
   getDepth(): BookDepth {
     return this.book.getDepth();
+  }
+
+  getTrades(): Trade[] {
+    return this.tradeLog.map((trade) => ({ ...trade }));
   }
 
   private pricesCross(incoming: Order, resting: Order): boolean {
